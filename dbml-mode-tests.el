@@ -19,6 +19,15 @@
     (should (string= (format "%s" (text-properties-at (point-min)))
                      "(face font-lock-comment-face)"))))
 
+(ert-deftest dbml-mode-comment-single-with-newline ()
+  "'// comment' with newline is highlighted as a comment."
+  (with-temp-buffer
+    (insert "// comment\n")
+    (should-not (text-properties-at (point-min)))
+    (dbml-mode-in-ert)
+    (should (string= (format "%s" (text-properties-at (point-min)))
+                     "(face font-lock-comment-face)"))))
+
 (provide 'dbml-mode-tests)
 
 ;;; dbml-mode-tests.el ends here
