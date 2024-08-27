@@ -34,6 +34,17 @@
   :group 'external
   :group 'programming)
 
+(defun dbml-mode--validate-table-names (num)
+  (let* ((begin (match-beginning num))
+         (end (match-end num))
+         (text (match-string num))
+         (pattern (rx (or line-start (+? whitespace))
+                      "table" (+? whitespace)
+                      (literal text)
+                      (*? whitespace) (literal "{"))))
+    (unless (string-match-p pattern (buffer-string))
+      (put-text-property begin end 'face '(underline error)))))
+
 (defun dbml-mode--validate-unique-table (num)
   (let* ((begin (match-beginning num))
          (end (match-end num))
@@ -102,6 +113,7 @@
        (0 'font-lock-builtin-face prepend)))
 
      ;; individual relationship settings (key-value keywords in angle brackets)
+     ;; TODO: highlight tables, check if they are defined
      (,(rx "ref" (*? print)
            (group (+? (or word "_"))) (literal ".") (group (+ (or word "_")))
            (*? print) (group (or ">" "<" "-" "<>")) (*? print)
@@ -125,7 +137,9 @@
        (progn (goto-char (match-end 6))
               ;; TODO return correct pos back
               )
-       nil ;; post
+       ;; post-match form; table name validation
+       (progn
+         (dbml-mode--validate-table-names 1))
        (0 'font-lock-builtin-face t)
        (1 'bold-italic prepend)
        (2 'default t)))))
