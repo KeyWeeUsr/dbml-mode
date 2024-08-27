@@ -16,8 +16,8 @@
     (insert "// comment")
     (should-not (text-properties-at (point-min)))
     (dbml-mode-in-ert)
-    (should (string= (format "%s" (text-properties-at (point-min)))
-                     "(face font-lock-comment-face)"))))
+    (should (string= (format "%S" (buffer-string))
+                     "#(\"// comment\" 0 10 (face font-lock-comment-face))"))))
 
 (ert-deftest dbml-mode-comment-single-with-newline ()
   "'// comment' with newline is highlighted as a comment."
@@ -25,8 +25,9 @@
     (insert "// comment\n")
     (should-not (text-properties-at (point-min)))
     (dbml-mode-in-ert)
-    (should (string= (format "%s" (text-properties-at (point-min)))
-                     "(face font-lock-comment-face)"))))
+    (should
+     (string= (format "%S" (buffer-string))
+              "#(\"// comment\n\" 0 11 (face font-lock-comment-face))"))))
 
 (ert-deftest dbml-mode-comment-multi-no-newline ()
   "'/* comment */' with no newline is highlighted as a comment."
@@ -34,8 +35,10 @@
     (insert "/*\nsome\ncomment\n*/")
     (should-not (text-properties-at (point-min)))
     (dbml-mode-in-ert)
-    (should (string= (format "%s" (text-properties-at (point-min)))
-                     "(face font-lock-comment-face)"))))
+    (should
+     (string=
+      (format "%S" (buffer-string))
+      "#(\"/*\nsome\ncomment\n*/\" 0 18 (face font-lock-comment-face))"))))
 
 (provide 'dbml-mode-tests)
 
