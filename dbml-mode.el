@@ -45,6 +45,33 @@
     (unless (string-match-p pattern (buffer-string))
       (put-text-property begin end 'face '(underline error)))))
 
+(defun dbml-mode--validate-column-names (table-match-num column-match-num)
+  ;; TODO: fix me for matching columns names when [] is split
+  ;; over multiple lines (fix regex or make it anchored)
+  (let* ((begin (match-beginning column-match-num))
+         (end (match-end column-match-num))
+         (column-name (match-string column-match-num))
+         (table-body-pattern (rx (or line-start (+? whitespace))
+                                 "table" (+? whitespace)
+                                 (literal (match-string table-match-num))
+                                 (*? whitespace) (literal "{")
+                                 (group (*? anychar)) "}"))
+         (column-pattern (rx line-start (+? blank)
+                             (group (+? (or word "_"))) (+? blank)
+                             (+ (or word "_")) (*? print) line-end)))
+    (save-match-data
+      (string-match table-body-pattern (buffer-string))
+      (let* ((table-body-begin (match-beginning 1))
+             (table-body-end (match-end 1))
+             (text (buffer-string))
+             (pos table-body-begin)
+             found-columns)
+        (while (string-match column-pattern text pos)
+          (push (match-string 1 text) found-columns)
+          (setq pos (match-end 1)))
+        (unless (member column-name found-columns)
+          (put-text-property begin end 'face '(underline error)))))))
+
 (defun dbml-mode--validate-unique-table (num)
   (let* ((begin (match-beginning num))
          (end (match-end num))
@@ -139,7 +166,8 @@
               )
        ;; post-match form; table name validation
        (progn
-         (dbml-mode--validate-table-names 1))
+         (dbml-mode--validate-table-names 1)
+         (dbml-mode--validate-column-names 1 2))
        (0 'font-lock-builtin-face t)
        (1 'bold-italic prepend)
        (2 'default t)))))
