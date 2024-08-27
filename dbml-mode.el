@@ -79,7 +79,36 @@
        (progn (goto-char (match-beginning 2))
               (match-end 2))
        nil ;; post
-       (0 'font-lock-builtin-face prepend)))))
+       (0 'font-lock-builtin-face prepend)))
+
+     ;; individual relationship settings (key-value keywords in angle brackets)
+     (,(rx "ref" (*? print)
+           (group (+? (or word "_"))) (literal ".") (group (+ (or word "_")))
+           (*? print) (group (or ">" "<" "-" "<>")) (*? print)
+           (group (+? (or word "_"))) (literal ".") (group (+ (or word "_")))
+           (*? print)
+           (group "[") (*? print) (group "]"))
+      (1 'italic)
+      (2 'bold-italic)
+      (3 'bold)
+      (3 'font-lock-builtin-face append)
+      (4 'italic)
+      (5 'bold-italic)
+      (6 'bold t)
+      (7 'bold t)
+      (,(rx (+? (group (or "delete" "update"))
+                (group ":") (*? blank)
+                (group (or "cascade" "restrict"
+                           (and "set" (+? blank) (or "null" "default"))
+                           (and "no" (+? blank) "action")))))
+       ;; pre-match in anchor, go before "]"
+       (progn (goto-char (match-end 6))
+              ;; TODO return correct pos back
+              )
+       nil ;; post
+       (0 'font-lock-builtin-face t)
+       (1 'bold-italic prepend)
+       (2 'default t)))))
 
   ;; NOTE: These MUST NOT set a face directly because it's weirdly
   ;; removed after post-self-insert-hook (or wherever...)
