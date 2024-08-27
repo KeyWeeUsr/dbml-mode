@@ -39,7 +39,16 @@
   "Major mode for editing DBML diagram files."
   :group 'dbml
 
-  (font-lock-set-defaults))
+  (font-lock-set-defaults)
+  (let ((table (make-syntax-table)))
+    ;; As per `Syntax-Flags' section
+    ;; / as a comment: opener, opener second char, closer second char
+    (modify-syntax-entry ?/ ". 124" table)
+    ;; * as a comment: opener second char (alternative), closer first char
+    (modify-syntax-entry ?* ". 23b" table)
+    ;; newline as a comment ender (primary)
+    (modify-syntax-entry ?\n ">" table)
+    (set-syntax-table table)))
 
 (provide 'dbml-mode)
 ;;; dbml-mode.el ends here
