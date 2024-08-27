@@ -55,7 +55,20 @@
      (,(rx (or "project" "table" "tablegroup" "enum")
            (*? whitespace)
            (group (+? graph)) (*? whitespace) (literal "{"))
-      (1 'font-lock-type-face))))
+      (1 'font-lock-type-face))
+
+     ;; column names/variables; must not split over lines
+     (,(rx (or line-start (+? whitespace))
+           "table" (*? anychar) (literal "{")
+           (group (*? anychar)) (literal "}"))
+      (,(rx (or line-start (*? blank))
+            (group (+? (or word "_"))) (+? blank)
+            (group (+ (or word "_"))) (*? print) line-end)
+       (progn (goto-char (1+ (match-beginning 1)))
+              (match-end 1))
+       nil ;; post
+       (1 'font-lock-variable-name-face)
+       (2 'font-lock-type-face)))))
 
   ;; NOTE: These MUST NOT set a face directly because it's weirdly
   ;; removed after post-self-insert-hook (or wherever...)
