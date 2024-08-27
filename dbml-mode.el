@@ -41,6 +41,20 @@
 
   (font-lock-set-defaults)
 
+  ;; case-insensitive matching
+  (setq-local font-lock-keywords-case-fold-search t)
+
+  (font-lock-add-keywords
+   ;; 'dbml-mode ;; TODO: keep to mode only!
+   nil
+   `(;; keywords
+     (,(rx (or "project" "table" "tablegroup" "note" "ref" "enum"))
+      0 'font-lock-keyword-face)))
+
+  ;; NOTE: These MUST NOT set a face directly because it's weirdly
+  ;; removed after post-self-insert-hook (or wherever...)
+  ;; Use `font-lock-add-keywords' because it's keywords based on regex
+  ;; i.e. "color-me-by-pattern" instead of it's original name
   (setq-local syntax-propertize-function
               (syntax-propertize-rules
                ;; multi-line string
