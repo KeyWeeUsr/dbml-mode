@@ -72,6 +72,34 @@
         (unless (member column-name found-columns)
           (put-text-property begin end 'face '(underline error)))))))
 
+(defun dbml-mode--validate-unique-column (num)
+  ;; TODO: fix me for matching columns names when [] is split
+  ;; over multiple lines (fix regex or make it anchored)
+  (let* ((begin (match-beginning num))
+         (end (match-end num))
+         (column-name (match-string num))
+         (table-body-pattern (rx (or line-start (+? whitespace))
+                                 "table" (+? whitespace)
+                                 (literal column-name) (*? whitespace)
+                                 (literal "{") (*? whitespace)
+                                 (group (*? anychar))
+                                 (*? whitespace) (literal "}")))
+         (column-pattern (rx line-start (+? blank)
+                             (group (+? (or word "_"))) (+? blank)
+                             (+ (or word "_")) (*? print) line-end)))
+    (save-match-data
+      (string-match table-body-pattern (buffer-string))
+      (let* ((table-body-begin (match-beginning 1))
+             (table-body-end (match-end 1))
+             (text (buffer-string))
+             (pos table-body-begin)
+             found-columns)
+        (while (string-match column-pattern text pos)
+          (push (match-string 1 text) found-columns)
+          (setq pos (match-end 1)))
+        (when (member column-name found-columns)
+          (put-text-property begin end 'face '(underline error)))))))
+
 (defun dbml-mode--validate-unique-table (num)
   (let* ((begin (match-beginning num))
          (end (match-end num))
@@ -124,7 +152,8 @@
             (group (+ (or word "_"))) (*? print) line-end)
        (progn (goto-char (1+ (match-beginning 1)))
               (match-end 1))
-       nil ;; post
+       (progn
+         (dbml-mode--validate-unique-column 1))
        (1 'font-lock-variable-name-face)
        (2 'font-lock-type-face)))
 
