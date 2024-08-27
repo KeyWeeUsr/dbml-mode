@@ -49,7 +49,13 @@
    nil
    `(;; keywords
      (,(rx (or "project" "table" "tablegroup" "note" "ref" "enum"))
-      0 'font-lock-keyword-face)))
+      0 'font-lock-keyword-face)
+
+     ;; names/types
+     (,(rx (or "project" "table" "tablegroup" "enum")
+           (*? whitespace)
+           (group (+? graph)) (*? whitespace) (literal "{"))
+      (1 'font-lock-type-face))))
 
   ;; NOTE: These MUST NOT set a face directly because it's weirdly
   ;; removed after post-self-insert-hook (or wherever...)
