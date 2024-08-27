@@ -40,6 +40,19 @@
   :group 'dbml
 
   (font-lock-set-defaults)
+
+  (setq-local syntax-propertize-function
+              (syntax-propertize-rules
+               ;; single-line strings
+               ((rx (or whitespace (literal ":"))
+                    (group "'" (*? print) "'")
+                    (not "'")) (1 "\""))
+
+               ;; multi-line strings
+               ((rx (or whitespace (literal ":"))
+                    (group "'''" (*? (not "'")) "'''")
+                    (not "'")) (1 "\""))))
+
   (let ((table (make-syntax-table)))
     ;; As per `Syntax-Flags' section
     ;; / as a comment: opener, opener second char, closer second char
