@@ -34,6 +34,25 @@
   :group 'external
   :group 'programming)
 
+(defun dbml-mode--validate-unique-table (num)
+  (let* ((begin (match-beginning num))
+         (end (match-end num))
+         (table-name (match-string num))
+         (pattern (rx (or line-start (+? whitespace))
+                      "table" (+? whitespace)
+                      (group (+? (or word "_")))
+                      (*? whitespace) (literal "{"))))
+    (save-match-data
+      (let* (;; check only previous occurrences, highlight current
+             (text (buffer-substring 1 begin))
+             (pos 0)
+             found-tables)
+        (while (string-match pattern text pos)
+          (push (match-string 1 text) found-tables)
+          (setq pos (match-end 1)))
+        (when (member table-name found-tables)
+          (put-text-property begin end 'face '(underline error)))))))
+
 ;;;###autoload
 (define-derived-mode dbml-mode prog-mode "DBML"
   "Major mode for editing DBML diagram files."
@@ -55,7 +74,8 @@
      (,(rx (or "project" "table" "tablegroup" "enum")
            (*? whitespace)
            (group (+? graph)) (*? whitespace) (literal "{"))
-      (1 'font-lock-type-face))
+      (1 'font-lock-type-face)
+      ((lambda (&rest _)) nil (dbml-mode--validate-unique-table 1) nil))
 
      ;; column names/variables; must not split over lines
      (,(rx (or line-start (+? whitespace))
