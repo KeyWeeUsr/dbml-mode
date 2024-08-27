@@ -38,7 +38,8 @@
 (define-derived-mode dbml-mode prog-mode "DBML"
   "Major mode for editing DBML diagram files."
   :group 'dbml
-  nil)
+
+  (font-lock-set-defaults))
 
 (provide 'dbml-mode)
 ;;; dbml-mode.el ends here
