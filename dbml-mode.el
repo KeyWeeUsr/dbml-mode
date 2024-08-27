@@ -43,6 +43,11 @@
 
   (setq-local syntax-propertize-function
               (syntax-propertize-rules
+               ;; multi-line string
+               ;; TODO: Ensure syntax highlighting works inside on patterns
+               ;; check js-mode-syntax-table in 25.1+
+               ((rx (group "`")) (1 "\""))
+
                ;; single-line strings
                ((rx (or whitespace (literal ":"))
                     (group "'" (*? print) "'")
