@@ -68,7 +68,18 @@
               (match-end 1))
        nil ;; post
        (1 'font-lock-variable-name-face)
-       (2 'font-lock-type-face)))))
+       (2 'font-lock-type-face)))
+
+     ;; individual column settings (non-value keywords in angle brackets)
+     (,(rx (group (literal "[")) (group (*? anychar)) (group (literal "]")))
+      (1 'bold) (3 'bold)
+      (,(rx (+? (or "pk" "primary key" "null"
+                    (and "not" (+? whitespace) "null")
+                    "unique" "increment" "note" "default")))
+       (progn (goto-char (match-beginning 2))
+              (match-end 2))
+       nil ;; post
+       (0 'font-lock-builtin-face prepend)))))
 
   ;; NOTE: These MUST NOT set a face directly because it's weirdly
   ;; removed after post-self-insert-hook (or wherever...)
