@@ -5,7 +5,7 @@
 ;; Author: Peter Badida <keyweeusr@gmail.com>
 ;; Keywords: convenience, dbml, language, markup, highlight
 ;; Version: 1.0.0
-;; Package-Requires: ((emacs "24.1"))
+;; Package-Requires: ((emacs "24.4"))
 ;; Homepage: https://github.com/KeyWeeUsr/dbml-mode
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+;; TODO: pull constant patterns away, out, to defconst
+(require 'subr-x)
+
 (defgroup dbml
   nil
   "Customization group for `dbml-mode'."
@@ -47,6 +50,8 @@
   :type 'string)
 
 (defun dbml-mode--validate-table-names (num)
+  "Validate whether table declaration exists.
+Argument NUM `match-data' group containing table name."
   (let* ((begin (match-beginning num))
          (end (match-end num))
          (text (match-string num))
@@ -58,6 +63,9 @@
       (put-text-property begin end 'face '(underline error)))))
 
 (defun dbml-mode--validate-column-names (table-match-num column-match-num)
+  "Validate whether column name declaration exists.
+Argument TABLE-MATCH-NUM `match-data' group containing table name.
+Argument COLUMN-MATCH-NUM `match-data' group containing column name."
   ;; TODO: fix me for matching columns names when [] is split
   ;; over multiple lines (fix regex or make it anchored)
   (let* ((begin (match-beginning column-match-num))
@@ -74,7 +82,6 @@
     (save-match-data
       (string-match table-body-pattern (buffer-string))
       (let* ((table-body-begin (match-beginning 1))
-             (table-body-end (match-end 1))
              (text (buffer-string))
              (pos table-body-begin)
              found-columns)
@@ -85,6 +92,8 @@
           (put-text-property begin end 'face '(underline error)))))))
 
 (defun dbml-mode--validate-unique-column (num)
+  "Validate whether table is declared only once.
+Argument NUM `match-data' group containing column name."
   ;; TODO: fix me for matching columns names when [] is split
   ;; over multiple lines (fix regex or make it anchored)
   (let* ((begin (match-beginning num))
@@ -102,7 +111,6 @@
     (save-match-data
       (string-match table-body-pattern (buffer-string))
       (let* ((table-body-begin (match-beginning 1))
-             (table-body-end (match-end 1))
              (text (buffer-string))
              (pos table-body-begin)
              found-columns)
@@ -113,6 +121,8 @@
           (put-text-property begin end 'face '(underline error)))))))
 
 (defun dbml-mode--validate-unique-table (num)
+  "Validate whether table is declared only once.
+Argument NUM `match-data' group containing table name."
   (let* ((begin (match-beginning num))
          (end (match-end num))
          (table-name (match-string num))
