@@ -34,6 +34,18 @@
   :group 'external
   :group 'programming)
 
+(defcustom dbml-mode-render-dockerized
+  t
+  "Use dockerized renderer."
+  :group 'dbml
+  :type 'boolean)
+
+(defcustom dbml-mode-render-bin
+  "dbml-renderer"
+  "Path to `dbml-renderer' or other compatible binary."
+  :group 'dbml
+  :type 'string)
+
 (defun dbml-mode--validate-table-names (num)
   (let* ((begin (match-beginning num))
          (end (match-end num))
@@ -119,10 +131,100 @@
         (when (member table-name found-tables)
           (put-text-property begin end 'face '(underline error)))))))
 
+(defun dbml-mode--render ()
+  "Render current buffer."
+  (interactive)
+  (if dbml-mode-render-dockerized
+      (dbml-mode--render-docker)
+    (dbml-mode--render-raw)))
+
+(defun dbml-mode--render-raw ()
+  "Render current buffer with `dbml-renderer' installed in the system."
+  (interactive)
+  (let* ((temp-name (make-temp-name ""))
+         (proc-name (format "dbml-mode-render-%s" temp-name)))
+    (message "meow")
+    (set-process-sentinel
+     (start-process
+      proc-name (get-buffer-create proc-name)
+      dbml-mode-render-bin
+      "--input" (file-name-nondirectory
+                 buffer-file-truename)
+      "--output" (format "%s.svg" (file-name-nondirectory
+                                   buffer-file-truename)))
+     `(lambda (proc msg)
+        (message "%s time: %s, status: %s, message: %s"
+                 "dbml-mode-run" (current-time-string)
+                 (process-status proc) msg)
+        (when (and (eq (process-status proc) 'exit)
+                   (string= (string-trim msg) "finished"))
+          (kill-buffer (get-buffer-create ,proc-name))
+          (find-file-other-window
+           (format "%s.svg" (file-name-nondirectory
+                             buffer-file-truename))))))))
+
+(defun dbml-mode--render-docker ()
+  "Render current buffer with dockerized `dbml-renderer'."
+  (interactive)
+  (let* ((dockerfile (string-join
+                     '("FROM node:alpine"
+                       "RUN npm install -g @softwaretechnik/dbml-renderer")
+                     "\n"))
+        (temp-name (make-temp-name ""))
+        (proc-name (format "dbml-mode-render-%s" temp-name))
+        (image-name "dbml-mode-render"))
+    (with-temp-file temp-name
+      (insert dockerfile)
+      (set-process-sentinel
+       (start-process
+        proc-name (get-buffer-create proc-name)
+        "docker" "build"
+        "--tag" image-name "--file" temp-name ".")
+       `(lambda (proc msg)
+          (message "%s time: %s, status: %s, message: %s"
+                   "dbml-mode-build" (current-time-string)
+                   (process-status proc) msg)
+          (when (and (eq (process-status proc) 'exit)
+                     (string= (string-trim msg) "finished"))
+            (kill-buffer (get-buffer-create ,proc-name))
+            (set-process-sentinel
+             (start-process
+              ,proc-name (get-buffer-create ,proc-name)
+              "docker" "run"
+              "--user" "1000:1000"
+              "--volume" (format "%s:/mnt"
+                                 (file-name-directory
+                                  (expand-file-name buffer-file-truename)))
+              "--workdir" "/mnt" ,image-name
+              ,dbml-mode-render-bin
+              "--input" (file-name-nondirectory
+                         buffer-file-truename)
+              "--output" (format "%s.svg" (file-name-nondirectory
+                                           buffer-file-truename)))
+             `(lambda (proc msg)
+                (message "%s time: %s, status: %s, message: %s"
+                         "dbml-mode-run" (current-time-string)
+                         (process-status proc) msg)
+                (when (and (eq (process-status proc) 'exit)
+                           (string= (string-trim msg) "finished"))
+                  (kill-buffer (get-buffer-create ,,proc-name))
+                  (find-file-other-window
+                   (format "%s.svg" (file-name-nondirectory
+                                     buffer-file-truename))))))))))))
+
+(defvar-local dbml-mode-keymap
+  (let ((map (make-keymap)))
+    (define-key map (kbd "C-c C-c") #'dbml-mode--render)
+    map)
+  "`dbml-mode-mode' key map.")
+
 ;;;###autoload
 (define-derived-mode dbml-mode prog-mode "DBML"
-  "Major mode for editing DBML diagram files."
+  "Major mode for editing DBML diagram files.
+
+\\{dbml-mode-keymap}"
   :group 'dbml
+  (use-local-map dbml-mode-keymap)
 
   (font-lock-set-defaults)
 
