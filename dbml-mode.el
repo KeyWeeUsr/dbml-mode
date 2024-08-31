@@ -226,6 +226,9 @@
   :group 'dbml
   (use-local-map dbml-mode-keymap)
 
+  ;; dummy indentation
+  (setq indent-line-function 'tab-to-tab-stop)
+
   (font-lock-set-defaults)
 
   ;; case-insensitive matching
