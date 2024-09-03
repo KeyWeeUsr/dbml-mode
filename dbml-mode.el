@@ -148,6 +148,20 @@ Argument NUM `match-data' group containing table name."
       (dbml-mode--render-docker)
     (dbml-mode--render-raw)))
 
+(defmacro dbml-mode--render-raw-cb (proc-name)
+  `(lambda (proc msg)
+     (message "%s time: %s, status: %s, message: %s"
+              "dbml-mode-run" (current-time-string)
+              (process-status proc) msg)
+     (if (and (eq (process-status proc) 'exit)
+              (string= (string-trim msg) "finished"))
+         (progn
+           (kill-buffer (get-buffer-create ,proc-name))
+           (find-file-other-window
+            (format "%s.svg" (file-name-nondirectory
+                              buffer-file-truename))))
+       (switch-to-buffer-other-window (get-buffer-create ,proc-name)))))
+
 (defun dbml-mode--render-raw ()
   "Render current buffer with `dbml-renderer' installed in the system."
   (interactive)
@@ -162,16 +176,48 @@ Argument NUM `match-data' group containing table name."
                  buffer-file-truename)
       "--output" (format "%s.svg" (file-name-nondirectory
                                    buffer-file-truename)))
-     `(lambda (proc msg)
-        (message "%s time: %s, status: %s, message: %s"
-                 "dbml-mode-run" (current-time-string)
-                 (process-status proc) msg)
-        (when (and (eq (process-status proc) 'exit)
-                   (string= (string-trim msg) "finished"))
-          (kill-buffer (get-buffer-create ,proc-name))
-          (find-file-other-window
-           (format "%s.svg" (file-name-nondirectory
-                             buffer-file-truename))))))))
+     (dbml-mode--render-raw-cb proc-name))))
+
+(defun dbml-mode--render-docker-run-cb (proc-name)
+  `(lambda (proc msg)
+     (message "%s time: %s, status: %s, message: %s"
+              "dbml-mode-run" (current-time-string)
+              (process-status proc) msg)
+     (if (and (eq (process-status proc) 'exit)
+              (string= (string-trim msg) "finished"))
+         (progn
+           (kill-buffer (get-buffer-create ,proc-name))
+           (find-file-other-window
+            (format "%s.svg" (file-name-nondirectory
+                              buffer-file-truename))))
+       (switch-to-buffer-other-window
+        (get-buffer-create ,proc-name)))))
+
+(defun dbml-mode--render-docker-build-cb (proc-name image-name)
+  `(lambda (proc msg)
+     (message "%s time: %s, status: %s, message: %s"
+              "dbml-mode-build" (current-time-string)
+              (process-status proc) msg)
+     (if (and (eq (process-status proc) 'exit)
+              (string= (string-trim msg) "finished"))
+         (progn
+           (kill-buffer (get-buffer-create ,proc-name))
+           (set-process-sentinel
+               (start-process
+                ,proc-name (get-buffer-create ,proc-name)
+                "docker" "run"
+                "--user" "1000:1000"
+                "--volume" (format "%s:/mnt"
+                                   (file-name-directory
+                                    (expand-file-name buffer-file-truename)))
+                "--workdir" "/mnt" ,image-name
+                dbml-mode-render-bin
+                "--input" (file-name-nondirectory
+                           buffer-file-truename)
+                "--output" (format "%s.svg" (file-name-nondirectory
+                                             buffer-file-truename)))
+             (dbml-mode--render-docker-run-cb ,proc-name)))
+       (switch-to-buffer-other-window (get-buffer-create ,proc-name)))))
 
 (defun dbml-mode--render-docker ()
   "Render current buffer with dockerized `dbml-renderer'."
@@ -186,41 +232,10 @@ Argument NUM `match-data' group containing table name."
     (with-temp-file temp-name
       (insert dockerfile)
       (set-process-sentinel
-       (start-process
-        proc-name (get-buffer-create proc-name)
-        "docker" "build"
-        "--tag" image-name "--file" temp-name ".")
-       `(lambda (proc msg)
-          (message "%s time: %s, status: %s, message: %s"
-                   "dbml-mode-build" (current-time-string)
-                   (process-status proc) msg)
-          (when (and (eq (process-status proc) 'exit)
-                     (string= (string-trim msg) "finished"))
-            (kill-buffer (get-buffer-create ,proc-name))
-            (set-process-sentinel
-             (start-process
-              ,proc-name (get-buffer-create ,proc-name)
-              "docker" "run"
-              "--user" "1000:1000"
-              "--volume" (format "%s:/mnt"
-                                 (file-name-directory
-                                  (expand-file-name buffer-file-truename)))
-              "--workdir" "/mnt" ,image-name
-              ,dbml-mode-render-bin
-              "--input" (file-name-nondirectory
-                         buffer-file-truename)
-              "--output" (format "%s.svg" (file-name-nondirectory
-                                           buffer-file-truename)))
-             `(lambda (proc msg)
-                (message "%s time: %s, status: %s, message: %s"
-                         "dbml-mode-run" (current-time-string)
-                         (process-status proc) msg)
-                (when (and (eq (process-status proc) 'exit)
-                           (string= (string-trim msg) "finished"))
-                  (kill-buffer (get-buffer-create ,,proc-name))
-                  (find-file-other-window
-                   (format "%s.svg" (file-name-nondirectory
-                                     buffer-file-truename))))))))))))
+          (start-process proc-name (get-buffer-create proc-name)
+                "docker" "build"
+                "--tag" image-name "--file" temp-name ".")
+          (dbml-mode--render-docker-build-cb proc-name image-name)))))
 
 (defvar-local dbml-mode-keymap
   (let ((map (make-keymap)))
