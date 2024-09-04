@@ -300,7 +300,7 @@ Argument NUM `match-data' group containing table name."
      ;; names/types
      (,(rx (or "project" "table" "tablegroup" "enum")
            (*? whitespace)
-           (group (+ graph)) (*? whitespace) (* anychar) line-end)
+           (group (+ (or word "_"))) (*? whitespace) (*? anychar) line-end)
       (1 'font-lock-type-face)
       ((lambda (&rest _)) nil (dbml-mode--validate-unique-table 1) nil))
 
