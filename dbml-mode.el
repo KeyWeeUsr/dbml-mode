@@ -234,26 +234,39 @@ Argument NUM `match-data' group containing table name."
       (switch-to-buffer-other-window (get-buffer-create proc-name))
       nil "dbml-mode-run")))
 
-(defun dbml-mode--render-docker ()
-  "Render current buffer with dockerized `dbml-renderer'."
-  (interactive)
+(defun dbml-mode--render-docker-build (proc &rest _)
   (let* ((dockerfile (string-join
                       '("FROM node:alpine"
                         "RUN npm install -g @softwaretechnik/dbml-renderer")
                       "\n"))
-         (temp-name (make-temp-name ""))
-         (proc-name (format "dbml-mode-render-%s" temp-name))
-         (image-name "dbml-mode-render")
-         (buff (get-buffer-create proc-name)))
+         (proc-name (process-name proc))
+         (buff (get-buffer-create proc-name))
+         (temp-name (car (last (string-split proc-name "-")))))
     (with-temp-file temp-name
       (insert dockerfile)
       (dbml-mode--with-sentinel
           (list proc-name buff "docker" "build"
-                "--tag" image-name "--file" temp-name ".")
+                "--tag" dbml-mode-build-image-name "--file" temp-name ".")
         'dbml-mode--render-docker-build-cb
         (switch-to-buffer-other-window buff)
         (delete-file temp-name)
         "dbml-mode-build"))))
+
+(defun dbml-mode--render-docker ()
+  "Render current buffer with dockerized `dbml-renderer'."
+  (interactive)
+  (let* ((temp-name (make-temp-name ""))
+         (proc-name (format "dbml-mode-render-%s" temp-name))
+         (buff (get-buffer-create proc-name)))
+    (dbml-mode--with-sentinel
+        (list proc-name buff "sh" "-c"
+              (format "docker images %s|grep %s"
+                      (format "--filter=reference=%s"
+                              (shell-quote-argument dbml-mode-use-image-name))
+                      (shell-quote-argument dbml-mode-use-image-name)))
+      'dbml-mode--render-docker-build-cb
+      'dbml-mode--render-docker-build
+      nil "dbml-mode-check-image")))
 
 (defvar-local dbml-mode-keymap
   (let ((map (make-keymap)))
