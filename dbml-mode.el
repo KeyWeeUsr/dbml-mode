@@ -282,8 +282,9 @@ Argument NUM `match-data' group containing table name."
   :group 'dbml
   (use-local-map dbml-mode-keymap)
 
-  ;; dummy indentation
+  ;; dummy indentation without broken newline indent
   (setq indent-line-function 'tab-to-tab-stop)
+  (setq electric-indent-mode nil)
 
   (font-lock-set-defaults)
 
