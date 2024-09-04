@@ -241,7 +241,7 @@ Argument NUM `match-data' group containing table name."
                       "\n"))
          (proc-name (process-name proc))
          (buff (get-buffer-create proc-name))
-         (temp-name (car (last (string-split proc-name "-")))))
+         (temp-name (car (last (split-string proc-name "-")))))
     (with-temp-file temp-name
       (insert dockerfile)
       (dbml-mode--with-sentinel
