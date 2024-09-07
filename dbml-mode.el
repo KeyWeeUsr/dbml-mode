@@ -295,18 +295,20 @@ Argument NUM `match-data' group containing table name."
    ;; 'dbml-mode ;; TODO: keep to mode only!
    nil
    `(;; keywords
-     (,(rx (or "project" "table" "tablegroup" "note" "ref" "enum"))
-      0 'font-lock-keyword-face)
+     (,(rx (or line-start (+? whitespace))
+           (group (or "project" "table" "tablegroup" "note" "ref" "enum")))
+      1 'font-lock-keyword-face)
 
      ;; names/types
-     (,(rx (or "project" "table" "tablegroup" "enum")
+     (,(rx (or line-start (+? whitespace))
+           (or "project" "table" "tablegroup" "enum")
            (*? whitespace)
            (group (+ (or word "_"))) (*? whitespace) (*? anychar) line-end)
       (1 'font-lock-type-face)
       ((lambda (&rest _)) nil (dbml-mode--validate-unique-table 1) nil))
 
      ;; column names/variables; must not split over lines
-     (,(rx line-start (*? whitespace)
+     (,(rx (or line-start (+? whitespace))
            "table" (*? anychar) (literal "{")
            (group (*? anychar)) (literal "}"))
       (,(rx

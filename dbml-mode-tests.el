@@ -297,6 +297,44 @@
                                     0 5 (face font-lock-keyword-face)
                                     9 12 (face font-lock-type-face)))))))
 
+(ert-deftest dbml-mode-keyword-in-word ()
+  "Do not highlight keyword as a part of other word (possibly mangled)."
+  (with-temp-buffer
+    (insert "notatable\nnot-a-table")
+    (should-not (text-properties-at (point-min)))
+    (dbml-mode-in-ert)
+    (should (string= (format "%S" (buffer-string))
+                     (format "%S" "notatable\nnot-a-table")))))
+
+(ert-deftest dbml-mode-table-name-in-mangled ()
+  "Do not highlight block name for mangled keyword."
+  (let ((lines '("table t"
+                 "table name"
+                 "table name{}"
+                 "table name2 {}"
+                 "xtable t"
+                 "xtable name"
+                 "xtable name{}"
+                 "xtable name2 {}")))
+    (with-temp-buffer
+      (insert (string-join lines "\n"))
+      (should-not (text-properties-at (point-min)))
+      (dbml-mode-in-ert)
+      (should (string= (format "%S" (buffer-string))
+                       (replace-regexp-in-string
+                        "placeholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        (string-join lines "\n")
+                        (format
+                         "%S" #("placeholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                0 5 (face font-lock-keyword-face)
+                                6 7 (face font-lock-type-face)
+                                8 13 (face font-lock-keyword-face)
+                                14 18 (face font-lock-type-face)
+                                19 24 (face font-lock-keyword-face)
+                                25 29 (face font-lock-type-face)
+                                32 37 (face font-lock-keyword-face)
+                                38 43 (face font-lock-type-face)))))))))
+
 (provide 'dbml-mode-tests)
 
 ;;; dbml-mode-tests.el ends here
