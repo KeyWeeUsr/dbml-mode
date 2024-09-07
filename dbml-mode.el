@@ -329,6 +329,7 @@ Argument NUM `match-data' group containing table name."
        (1 'font-lock-variable-name-face)
        (2 'font-lock-type-face)))
 
+     ;; TODO: prefix with braces, anchored as a block?
      ;; individual column settings (non-value keywords in angle brackets)
      (,(rx (group (literal "[")) (group (*? anychar)) (group (literal "]")))
       (1 'bold) (3 'bold)
@@ -336,7 +337,7 @@ Argument NUM `match-data' group containing table name."
                     (and "not" (+? whitespace) "null")
                     "unique" "increment" "note" "default")))
        (progn (goto-char (match-beginning 2))
-              (match-end 2))
+              (match-end 3))
        nil ;; post
        (0 'font-lock-builtin-face prepend)))
 
