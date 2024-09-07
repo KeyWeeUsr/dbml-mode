@@ -306,7 +306,7 @@ Argument NUM `match-data' group containing table name."
       ((lambda (&rest _)) nil (dbml-mode--validate-unique-table 1) nil))
 
      ;; column names/variables; must not split over lines
-     (,(rx line-start (*? not-newline)
+     (,(rx line-start (*? whitespace)
            "table" (*? anychar) (literal "{")
            (group (*? anychar)) (literal "}"))
       (,(rx
