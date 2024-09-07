@@ -316,8 +316,14 @@ Argument NUM `match-data' group containing table name."
          (group (+ (or word "_")))
          ;; trailing trash and delimiter
          (*? anychar) line-end)
+       ;; pre-match form
        (progn
-         (dbml-mode--validate-unique-column 1))
+         ;; start matching in the braces
+         (goto-char (match-beginning 1))
+         ;; then keep the anchored match loop within the block
+         (match-end 0))
+       ;; post-match form
+       (progn (dbml-mode--validate-unique-column 1))
        (1 'font-lock-variable-name-face)
        (2 'font-lock-type-face)))
 
