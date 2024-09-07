@@ -309,11 +309,13 @@ Argument NUM `match-data' group containing table name."
      (,(rx line-start (*? not-newline)
            "table" (*? anychar) (literal "{")
            (group (*? anychar)) (literal "}"))
-      (,(rx (or line-start (*? blank))
-            (group (+? (or word "_"))) (+? blank)
-            (group (+ (or word "_"))) (*? print) line-end)
-       (progn (goto-char (1+ (match-beginning 1)))
-              (match-end 1))
+      (,(rx
+         ;; col name
+         (group (+ (or word "_"))) (+? blank)
+         ;; col type
+         (group (+ (or word "_")))
+         ;; trailing trash and delimiter
+         (*? anychar) line-end)
        (progn
          (dbml-mode--validate-unique-column 1))
        (1 'font-lock-variable-name-face)
