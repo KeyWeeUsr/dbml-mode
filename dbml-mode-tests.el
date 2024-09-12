@@ -414,6 +414,25 @@
                          38 42 (face font-lock-type-face fontified t)
                          42 44 (fontified t)))))))))
 
+(ert-deftest dbml-mode-table-name-duplicate ()
+  "Highlight table name if duplicated before occurrence."
+  (let ((lines '("table name{}"
+                 "table name{}")))
+    (with-temp-buffer
+      (insert (string-join lines "\n"))
+      (should-not (text-properties-at (point-min)))
+      (dbml-mode-in-ert)
+      (should (string= (format "%S" (buffer-string))
+                       (replace-regexp-in-string
+                        "placeholderxxxxxxxxxxxxxxxx"
+                        (string-join lines "\n")
+                        (format
+                         "%S" #("placeholderxxxxxxxxxxxxxxxx"
+                                0 5 (face font-lock-keyword-face)
+                                6 10 (face font-lock-type-face)
+                                13 18 (face font-lock-keyword-face)
+                                19 23 (face (underline error))))))))))
+
 (provide 'dbml-mode-tests)
 
 ;;; dbml-mode-tests.el ends here
