@@ -287,6 +287,23 @@ Argument NUM `match-data' group containing table name."
   (setq electric-indent-mode nil)
 
   (font-lock-set-defaults)
+  (setq-local
+   font-lock-extend-after-change-region-function
+   (lambda (&rest _)
+     ;; TODO: make me context-aware. Anchor matchers' forms are not useful for
+     ;;       that because those aren't evaluated during before/after
+     ;;       `after-change-function'.
+     ;;
+     ;; Naive whole-buffer re-highlight because of missing *direct* context
+     ;; from anchors. So either indirect by looking back for delimiters or
+     ;; there's some magical way to always eval anchor forms.
+     ;;
+     ;; This can be done in two ways. Super-silly one by searching back just
+     ;; for `}' and highlighting until `point-max' or smarter one, though more
+     ;; expensive, via regex search for anchored patterns. The interesting and
+     ;; problematic part there is: which of the patterns to try; or will it
+     ;; always be all of them and then some logic for guessing?
+     (cons (point-min) (point-max))))
 
   ;; case-insensitive matching
   (setq-local font-lock-keywords-case-fold-search t)

@@ -4,10 +4,12 @@
 
 (require 'ert)
 (require 'dbml-mode)
+(require 'font-lock)
 
 (defsubst dbml-mode-in-ert ()
   "Because something is turned off in ERT."
   (dbml-mode)
+  (font-lock-mode 1)
   (font-lock-ensure))
 
 (ert-deftest dbml-mode-comment-single-no-newline ()
@@ -334,6 +336,83 @@
                                 25 29 (face font-lock-type-face)
                                 32 37 (face font-lock-keyword-face)
                                 38 43 (face font-lock-type-face)))))))))
+
+(ert-deftest dbml-mode-column-name-rehighlight-in-anchored ()
+  "Re-highlight columns (anchored block pattern matching region)."
+  (let* ((noninteractive nil)
+         (lines '("table name {"
+                  "one type"
+                  "two type"
+                  "}"))
+         (expected '("table name {"
+                     "one type"
+                     "two type2"
+                     "three type"
+                     "}")))
+    (with-temp-buffer
+      (dolist (char (string-to-list (string-join lines "\n")))
+        (when char
+          (execute-kbd-macro (kbd (cond ((= char 10) "RET")
+                                        ((= char 32) "SPC")
+                                        (t (char-to-string char)))))))
+      (should-not (text-properties-at (point-min)))
+      (dbml-mode-in-ert)
+
+      (should
+       (string= (format "%S" (buffer-string))
+                (replace-regexp-in-string
+                 "placeholderxxxxxxxxxxxxxxxxxxxxx"
+                 (string-join lines "\n")
+                 (format
+                  "%S" #("placeholderxxxxxxxxxxxxxxxxxxxxx"
+                         0 5   (face font-lock-keyword-face fontified t)
+                         5 6   (fontified t)
+                         6 10  (face font-lock-type-face fontified t)
+                         10 13 (fontified t)
+                         13 16 (face font-lock-variable-name-face fontified t)
+                         16 17 (fontified t)
+                         17 21 (face font-lock-type-face fontified t)
+                         21 22 (fontified t)
+                         22 25 (face font-lock-variable-name-face fontified t)
+                         25 26 (fontified t)
+                         26 30 (face font-lock-type-face fontified t)
+                         30 32 (fontified t))))))
+
+      ;; Go to last col's type, type something to trigger re-highlighting
+      (goto-char (- (point-max) 2))
+      (execute-kbd-macro (kbd "2"))
+      (dolist (char (string-to-list "\nthree type"))
+        (when char (execute-kbd-macro (kbd (cond ((= char 10) "RET")
+                                                 ((= char 32) "SPC")
+                                                 (t (char-to-string char)))))))
+
+      ;; TODO: fontification-functions are NOT called in ERT. Why?
+      (jit-lock-fontify-now)
+
+      (should
+       (string= (format "%S" (buffer-string))
+                (replace-regexp-in-string
+                 "placeholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                 (string-join expected "\n")
+                 (format
+                  ;; DO NOT TOUCH THESE!!!!
+                  "%S" #("placeholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                         0 5   (face font-lock-keyword-face fontified t)
+                         5 6   (fontified t)
+                         6 10  (face font-lock-type-face fontified t)
+                         10 13 (fontified t)
+                         13 16 (face font-lock-variable-name-face fontified t)
+                         16 17 (fontified t)
+                         17 21 (face font-lock-type-face fontified t)
+                         21 22 (fontified t)
+                         22 25 (face font-lock-variable-name-face fontified t)
+                         25 26 (fontified t)
+                         26 31 (face font-lock-type-face fontified t)
+                         31 32 (fontified t)
+                         32 37 (face font-lock-variable-name-face fontified t)
+                         37 38 (fontified t)
+                         38 42 (face font-lock-type-face fontified t)
+                         42 44 (fontified t)))))))))
 
 (provide 'dbml-mode-tests)
 
