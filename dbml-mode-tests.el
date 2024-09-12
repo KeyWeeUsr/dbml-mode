@@ -5,6 +5,7 @@
 (require 'ert)
 (require 'dbml-mode)
 (require 'font-lock)
+(setq ert-quiet t)
 
 (defsubst dbml-mode-in-ert ()
   "Because something is turned off in ERT."
