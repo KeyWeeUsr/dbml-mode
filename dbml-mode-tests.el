@@ -451,6 +451,23 @@
                                 6 11 (face font-lock-keyword-face)
                                 12 17 (face font-lock-keyword-face)))))))))
 
+(ert-deftest dbml-mode-not-a-column ()
+  "Columns are anchored. No random highlighting out of braces."
+  (let ((lines '("Table name {}"
+                 " do not mark this as a column!")))
+    (with-temp-buffer
+      (insert (string-join lines "\n"))
+      (should-not (text-properties-at (point-min)))
+      (dbml-mode-in-ert)
+      (should (string= (format "%S" (buffer-string))
+                       (replace-regexp-in-string
+                        "placeholder"
+                        (string-join lines "\n")
+                        (format
+                         "%S" #("placeholder"
+                                0 5 (face font-lock-keyword-face)
+                                6 10 (face font-lock-type-face)))))))))
+
 (provide 'dbml-mode-tests)
 
 ;;; dbml-mode-tests.el ends here
