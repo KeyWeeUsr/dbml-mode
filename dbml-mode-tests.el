@@ -434,6 +434,23 @@
                                 13 18 (face font-lock-keyword-face)
                                 19 23 (face (underline error))))))))))
 
+(ert-deftest dbml-mode-keyword-multi-occurrence ()
+  "Highlight keywords even if duplicated."
+  (let ((lines '("table table" "table")))
+    (with-temp-buffer
+      (insert (string-join lines "\n"))
+      (should-not (text-properties-at (point-min)))
+      (dbml-mode-in-ert)
+      (should (string= (format "%S" (buffer-string))
+                       (replace-regexp-in-string
+                        "placeholderxxxxxx"
+                        (string-join lines "\n")
+                        (format
+                         "%S" #("placeholderxxxxxx"
+                                0 5 (face font-lock-keyword-face)
+                                6 11 (face font-lock-keyword-face)
+                                12 17 (face font-lock-keyword-face)))))))))
+
 (provide 'dbml-mode-tests)
 
 ;;; dbml-mode-tests.el ends here
