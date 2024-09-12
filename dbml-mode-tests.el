@@ -468,6 +468,42 @@
                                 0 5 (face font-lock-keyword-face)
                                 6 10 (face font-lock-type-face)))))))))
 
+(ert-deftest dbml-mode-column-settings ()
+  "Columns settings are anchored to brackets and belong to a known list."
+  ;; TODO: pull to defcustom var
+  (dolist (word-prop '("pk" "primary key" "null" "not null" "unique"
+                       "increment" ("note" font-lock-keyword-face) "default"))
+    (let* ((word (if (stringp word-prop) word-prop (car word-prop)))
+           (prop (if (stringp word-prop) '(font-lock-builtin-face)
+                   (backquote (font-lock-builtin-face ,@(cdr word-prop)))))
+           (blank ", not, ")
+           (text (format "table test{col type [%s%s%s]}" word blank word)))
+      (with-temp-buffer
+        (insert text)
+        (should-not (text-properties-at (point-min)))
+        (dbml-mode-in-ert)
+        (should
+         (string=
+          (replace-regexp-in-string "#" "" (format "%S" (buffer-string)))
+          (replace-regexp-in-string
+           "placeholderxxxxxxxxxxxxxxxxxxxxxx" text
+           (format
+            "%S" (list
+                  "placeholderxxxxxxxxxxxxxxxxxxxxxx"
+                  0 5 '(face font-lock-keyword-face)
+                  6 10 '(face font-lock-type-face)
+                  11 14 '(face font-lock-variable-name-face)
+                  15 19 '(face font-lock-type-face)
+                  20 21 '(face bold)
+                  ;; append/prepend -> ()
+                  21 (+ 21 (length word)) '(face (font-lock-builtin-face))
+                  (+ 21 (length word) (length blank))
+                  (+ 21 (length word) (length blank) (length word))
+                  (backquote (face ,prop))
+                  (+ 21 (length word) (length blank) (length word))
+                  (+ 21 (length word) (length blank) (length word) 1)
+                  '(face bold))))))))))
+
 (provide 'dbml-mode-tests)
 
 ;;; dbml-mode-tests.el ends here
