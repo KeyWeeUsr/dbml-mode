@@ -425,10 +425,10 @@
       (dbml-mode-in-ert)
       (should (string= (format "%S" (buffer-string))
                        (replace-regexp-in-string
-                        "placeholderxxxxxxxxxxxxxxxx"
+                        "placeholderxxxxxxxxxxxx"
                         (string-join lines "\n")
                         (format
-                         "%S" #("placeholderxxxxxxxxxxxxxxxx"
+                         "%S" #("placeholderxxxxxxxxxxxx"
                                 0 5 (face font-lock-keyword-face)
                                 6 10 (face font-lock-type-face)
                                 13 18 (face font-lock-keyword-face)
