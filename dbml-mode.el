@@ -62,6 +62,11 @@
   :type 'string)
 
 (defmacro dbml-mode--with-sentinel (args success &optional fail always verbose)
+  "Decorator for running process with sentinels.
+Argument ARGS passed into `start-process'.
+Arguments SUCCESS, FAIL, ALWAYS are either a form, lambda or function symbol.
+Functions are passed the current process and its status (processp, string).
+Optional argument VERBOSE shows debugging messages if non-nil.  A string will be used as a prefix for the message."
   (declare (indent 1) (debug t))
   (list
    'set-process-sentinel
@@ -190,6 +195,7 @@ Argument NUM `match-data' group containing table name."
     (dbml-mode--render-raw)))
 
 (defsubst dbml-mode--render-raw-cb (proc &rest _)
+  "Handler for `dbml-renderer' PROC."
   (kill-buffer (get-buffer-create (process-name proc)))
   (find-file-other-window
    (format "%s.svg" (file-name-nondirectory
@@ -210,12 +216,14 @@ Argument NUM `match-data' group containing table name."
       (switch-to-buffer-other-window buff))))
 
 (defun dbml-mode--render-docker-run-cb (proc &rest _)
+  "Handler for \"docker run\" PROC."
   (kill-buffer (get-buffer-create (process-name proc)))
   (find-file-other-window
    (format "%s.svg" (file-name-nondirectory
                      (expand-file-name buffer-file-truename)))))
 
 (defun dbml-mode--render-docker-build-cb (proc &rest _)
+  "Handler for \"docker build\" PROC."
   (let* ((proc-name (process-name proc))
          (buff (get-buffer-create proc-name))
          (full-path (expand-file-name buffer-file-truename))
@@ -235,6 +243,8 @@ Argument NUM `match-data' group containing table name."
       nil "dbml-mode-run")))
 
 (defun dbml-mode--render-docker-build (proc &rest _)
+  "Build Docker image for `dbml-renderer'.
+Argument PROC is a handle from previous process checking for image presence."
   (let* ((dockerfile (string-join
                       '("FROM node:alpine"
                         "RUN npm install -g @softwaretechnik/dbml-renderer")
