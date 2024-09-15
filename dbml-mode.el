@@ -23,7 +23,9 @@
 
 ;;; Commentary:
 
-;; -
+;; This major mode attempts to port all of the syntax highlighting from
+;; https://dbdiagram.io and build upon it by providing helpers such as
+;; duplicate checking and rendering SVGs directly in Emacs.
 
 ;;; Code:
 
@@ -51,13 +53,13 @@
 
 (defcustom dbml-mode-build-image-name
   "dbml-mode-render"
-  "Image name to use for 'docker build --tag'."
+  "Image name to use for =docker build --tag=."
   :group 'dbml
   :type 'string)
 
 (defcustom dbml-mode-use-image-name
   nil
-  "Image to use for 'docker run', overrides `dbml-mode-build-image-name'."
+  "Image to use for =docker run=, overrides `dbml-mode-build-image-name'."
   :group 'dbml
   :type 'string)
 
@@ -66,7 +68,8 @@
 Argument ARGS passed into `start-process'.
 Arguments SUCCESS, FAIL, ALWAYS are either a form, lambda or function symbol.
 Functions are passed the current process and its status (processp, string).
-Optional argument VERBOSE shows debugging messages if non-nil.  A string will be used as a prefix for the message."
+Optional argument VERBOSE shows debugging messages if non-nil.  A string will
+be used as a prefix for the message."
   (declare (indent 1) (debug t))
   (list
    'set-process-sentinel
@@ -293,7 +296,7 @@ Argument PROC is a handle from previous process checking for image presence."
   (use-local-map dbml-mode-keymap)
 
   ;; dummy indentation without broken newline indent
-  (setq indent-line-function 'tab-to-tab-stop)
+  (setq indent-line-function #'tab-to-tab-stop)
   (setq electric-indent-mode nil)
 
   (font-lock-set-defaults)
