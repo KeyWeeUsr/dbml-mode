@@ -343,7 +343,12 @@ Argument PROC is a handle from previous process checking for image presence."
            (group (*? anychar)) (literal "}"))
       (,(rx
          ;; col name
-         (group (+ (or word "_"))) (+? blank)
+         (group (or
+                 ;; normal word
+                 (+ (or word "_"))
+                 ;; quoted with spaces
+                 (and (literal "\"") (+ not-newline) (literal "\""))))
+         (+? blank)
          ;; col type
          (group (+ (or word "_")))
          ;; trailing trash and delimiter
@@ -356,7 +361,7 @@ Argument PROC is a handle from previous process checking for image presence."
          (match-end 0))
        ;; post-match form
        (progn (dbml-mode--validate-unique-column 1))
-       (1 'font-lock-variable-name-face)
+       (1 'font-lock-variable-name-face t)
        (2 'font-lock-type-face)))
 
      ;; TODO: prefix with braces, anchored as a block?
