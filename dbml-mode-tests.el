@@ -448,7 +448,7 @@
                         (format
                          "%S" #("placeholderxxxxxx"
                                 0 5 (face font-lock-keyword-face)
-                                6 11 (face font-lock-keyword-face)
+                                6 11 (face font-lock-type-face)
                                 12 17 (face font-lock-keyword-face)))))))))
 
 (ert-deftest dbml-mode-not-a-column ()
