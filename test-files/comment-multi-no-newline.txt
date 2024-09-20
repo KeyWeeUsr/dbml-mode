@@ -1,0 +1,8 @@
+>/*
+#^-?
+>some
+#----?
+>comment
+#-------?
+>*/
+#--$|(face font-lock-comment-face)

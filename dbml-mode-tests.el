@@ -37,7 +37,9 @@
                        (setq inside t)
                        (push start properties))
                      (if (not end)
-                         (setq inside (string-match "?" text))
+                         (progn
+                           (unless (numberp inside) (setq inside 0))
+                           (setq inside (+ inside (string-match "?" text))))
                        (when (numberp inside)
                          (setq end (+ end inside)))
                        (setq inside nil)
@@ -64,15 +66,7 @@
   (dbml-mode-test-file "test-files/comment-single-with-newline.txt"))
 
 (ert-deftest dbml-mode-comment-multi-no-newline ()
-  "'/* comment */' with no newline is highlighted as a comment."
-  (with-temp-buffer
-    (insert "/*\nsome\ncomment\n*/")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #("/*\nsome\ncomment\n*/" 0 18
-                      (face font-lock-comment-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "test-files/comment-multi-no-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-start-no-newline ()
   "One of the keywords with no newline is highlighted as a keyword."
