@@ -170,24 +170,37 @@ Argument NUM `match-data' group containing column name."
         (when (member column-name found-columns)
           (put-text-property begin end 'face '(underline error)))))))
 
-(defun dbml-mode--validate-unique-table (num)
+(defun dbml-mode--validate-unique-table (schema-num name-num)
   "Validate whether table is declared only once.
-Argument NUM `match-data' group containing table name."
-  (let* ((begin (match-beginning num))
-         (end (match-end num))
-         (table-name (match-string num))
-         (pattern (rx (or line-start (+? whitespace))
+Argument SCHEMA-NUM `match-data' group containing schema name.
+Argument NAME-NUM `match-data' group containing table name."
+  (let* ((begin (match-beginning schema-num))
+         (end (match-end name-num))
+         (table-name (format "%s%s"
+                             (match-string schema-num)
+                             (match-string name-num)))
+         (pattern (rx line-start (*? whitespace)
                       "table" (+? whitespace)
-                      (group (+? (or word "_")))
+                      (group (? (or (+ (or word "_"))
+                                    (and (literal "\"")
+                                         (+ not-newline)
+                                         (literal "\"")))
+                                (literal ".")))
+                      (group (or (+ (or word "_"))
+                                 (and (literal "\"")
+                                      (+ not-newline)
+                                      (literal "\""))))
+                      (? (+ blank) "as" (+ blank) (group (+ (or word "_"))))
                       (*? whitespace) (literal "{"))))
     (save-match-data
       (let* (;; check only previous occurrences, highlight current
-             (text (buffer-substring 1 begin))
+             (text (buffer-substring-no-properties 1 begin))
              (pos 0)
              found-tables)
         (while (string-match pattern text pos)
-          (push (match-string 1 text) found-tables)
-          (setq pos (match-end 1)))
+          (push (format "%s%s" (match-string 1 text) (match-string 2 text))
+                found-tables)
+          (setq pos (match-end 2)))
         (when (member table-name found-tables)
           (put-text-property begin end 'face '(underline error)))))))
 
@@ -336,10 +349,17 @@ Argument PROC is a handle from previous process checking for image presence."
      ;; names/types
      (,(rx line-start (*? whitespace)
            (or "project" "table" "tablegroup" "enum")
-           (*? whitespace)
-           (group (+ (or word "_"))) (*? whitespace) (*? anychar) line-end)
-      (1 'font-lock-type-face)
-      ((lambda (&rest _)) nil (dbml-mode--validate-unique-table 1) nil))
+           (+? whitespace)
+           (group (? (or (+ (or word "_"))
+                         (and (literal "\"") (+ not-newline) (literal "\"")))
+                     (literal ".")))
+           (group (or (+ (or word "_"))
+                      (and (literal "\"") (+ not-newline) (literal "\""))))
+           (? (+ blank) "as" (+ blank) (group (+ (or word "_")))))
+      (1 '(font-lock-type-face italic) t)
+      (2 'font-lock-type-face t)
+      (3 '(font-lock-type-face italic) t 'ignore-error)
+      ((lambda (&rest _)) nil (dbml-mode--validate-unique-table 1 2) nil))
 
      ;; column names/variables; must not split over lines
      (,(rx line-start (*? whitespace)
