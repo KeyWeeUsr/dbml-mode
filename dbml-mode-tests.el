@@ -15,7 +15,7 @@
 
 (defsubst dbml-mode-test-file (path)
   "Check for font properties based on marks in file located in PATH."
-  (let (to-highlight highlighted work-buff properties)
+  (let (to-highlight highlighted work-buff properties inside)
     (with-temp-buffer
       (setq work-buff (current-buffer))
 
@@ -30,13 +30,23 @@
                      (insert (string-trim-right
                               (substring-no-properties line 1) "\n"))))
                   ((string-prefix-p "#" line)
-                   (let ((text (substring-no-properties line 1)))
-                     (push (string-match "\\^" text) properties)
-                     (push (string-match "\\$" text) properties)
-                     (push (intern (string-trim-right
-                                    (substring-no-properties
-                                     line (+ 2 (string-match "|" text))) "\n"))
-                           properties)))))))
+                   (let* ((text (substring-no-properties line 1))
+                          (start (string-match "\\^" text))
+                          (end (string-match "\\$" text)))
+                     (when start
+                       (setq inside t)
+                       (push start properties))
+                     (if (not end)
+                         (setq inside (string-match "?" text))
+                       (when (numberp inside)
+                         (setq end (+ end inside)))
+                       (setq inside nil)
+                       (push end properties)
+                       (push (intern
+                              (string-trim-right
+                               (substring-no-properties
+                                line (+ 2 (string-match "|" text))) "\n"))
+                             properties))))))))
       (setq to-highlight
             (buffer-substring-no-properties (point-min) (point-max)))
       (goto-char (point-min))
@@ -51,14 +61,7 @@
   (dbml-mode-test-file "test-files/comment-single-no-newline.txt"))
 
 (ert-deftest dbml-mode-comment-single-with-newline ()
-  "'// comment' with newline is highlighted as a comment."
-  (with-temp-buffer
-    (insert "// comment\n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #("// comment\n" 0 11 (face font-lock-comment-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "test-files/comment-single-with-newline.txt"))
 
 (ert-deftest dbml-mode-comment-multi-no-newline ()
   "'/* comment */' with no newline is highlighted as a comment."
