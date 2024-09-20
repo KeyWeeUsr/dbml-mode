@@ -324,9 +324,13 @@ Argument PROC is a handle from previous process checking for image presence."
   (font-lock-add-keywords
    ;; 'dbml-mode ;; TODO: keep to mode only!
    nil
-   `(;; keywords
+   `(;; inline keywords
      (,(rx (or line-start (+? whitespace))
-           (group (or "project" "table" "tablegroup" "note" "ref" "enum")))
+           (group (or "note" "ref" "indexes" "as")))
+      1 'font-lock-keyword-face)
+     ;; block keywords
+     (,(rx line-start (*? whitespace)
+           (group (or "project" "table" "tablegroup" "enum")))
       1 'font-lock-keyword-face)
 
      ;; names/types

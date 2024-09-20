@@ -454,7 +454,7 @@
 (ert-deftest dbml-mode-not-a-column ()
   "Columns are anchored. No random highlighting out of braces."
   (let ((lines '("Table name {}"
-                 " do not mark this as a column!")))
+                 " don't highlight this line with column font!")))
     (with-temp-buffer
       (insert (string-join lines "\n"))
       (should-not (text-properties-at (point-min)))
