@@ -342,7 +342,7 @@ Argument PROC is a handle from previous process checking for image presence."
       ((lambda (&rest _)) nil (dbml-mode--validate-unique-table 1) nil))
 
      ;; column names/variables; must not split over lines
-     (,(rx (or line-start (+? whitespace))
+     (,(rx line-start (*? whitespace)
            "table" (*? anychar) (literal "{")
            (group (*? anychar)) (literal "}"))
       (,(rx
