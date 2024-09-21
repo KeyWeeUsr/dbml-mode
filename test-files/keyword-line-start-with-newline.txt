@@ -1,0 +1,3 @@
+>table
+#^----$|(face font-lock-keyword-face)
+>

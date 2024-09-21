@@ -77,298 +77,82 @@
   (dbml-mode-test-file "comment-multi-no-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-start-no-newline ()
-  "One of the keywords with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #("table" 0 5 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-start-no-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-leading-no-newline ()
-  "One of the keywords with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #(" table" 1 6 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-leading-no-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-leading-trailing-no-newline ()
-  "One of the keywords with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table ")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #(" table " 1 6 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-leading-trailing-no-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-trailing-no-newline ()
-  "One of the keywords with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table ")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #("table " 0 5 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-trailing-no-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-start-with-newline ()
-  "One of the keywords with with newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table\n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #("table\n" 0 5 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-start-with-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-leading-with-newline ()
-  "One of the keywords with with newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table\n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #(" table\n" 1 6 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-leading-with-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-leading-trailing-with-newline ()
-  "One of the keywords with with newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table \n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #(" table \n" 1 6 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-leading-trailing-with-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-trailing-with-newline ()
-  "One of the keywords with with newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table \n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (let ((expected #("table \n" 0 5 (face font-lock-keyword-face))))
-      (should
-       (string= (format "%S" (buffer-string)) (format "%S" expected))))))
+  (dbml-mode-test-file "keyword-line-trailing-with-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-start-no-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table abc")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table abc"
-                                    0 5 (face font-lock-keyword-face)
-                                    6 9 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-start-no-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-no-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table abc")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table abc"
-                                    1 6 (face font-lock-keyword-face)
-                                    7 10 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-no-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-trailing-no-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table abc ")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table abc "
-                                    1 6 (face font-lock-keyword-face)
-                                    7 10 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-trailing-no-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-trailing-no-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table abc ")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table abc "
-                                    0 5 (face font-lock-keyword-face)
-                                    6 9 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-trailing-no-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-start-with-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table abc\n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table abc\n"
-                                    0 5 (face font-lock-keyword-face)
-                                    6 9 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-start-with-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-with-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table abc\n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table abc\n"
-                                    1 6 (face font-lock-keyword-face)
-                                    7 10 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-with-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-trailing-with-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table abc \n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table abc \n"
-                                    1 6 (face font-lock-keyword-face)
-                                    7 10 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-trailing-with-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-trailing-with-newline ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table abc \n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table abc \n"
-                                    0 5 (face font-lock-keyword-face)
-                                    6 9 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-trailing-with-newline.txt"))
 
 (ert-deftest dbml-mode-table-name-line-start-no-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table    abc")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table    abc"
-                                    0 5 (face font-lock-keyword-face)
-                                    9 12 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-start-no-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-no-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table    abc")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table    abc"
-                                    1 6 (face font-lock-keyword-face)
-                                    10 13 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-no-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-trailing-no-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table    abc ")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table    abc "
-                                    1 6 (face font-lock-keyword-face)
-                                    10 13 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-trailing-no-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-table-name-line-trailing-no-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table    abc ")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table    abc "
-                                    0 5 (face font-lock-keyword-face)
-                                    9 12 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-trailing-no-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-table-name-line-start-with-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table    abc\n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table    abc\n"
-                                    0 5 (face font-lock-keyword-face)
-                                    9 12 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-start-with-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-with-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table    abc\n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table    abc\n"
-                                    1 6 (face font-lock-keyword-face)
-                                    10 13 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-with-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-table-name-line-leading-trailing-with-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert " table    abc \n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #(" table    abc \n"
-                                    1 6 (face font-lock-keyword-face)
-                                    10 13 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-leading-trailing-with-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-table-name-line-trailing-with-newline-spaced ()
-  "Table name with no newline is highlighted as a keyword."
-  (with-temp-buffer
-    (insert "table    abc \n")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" #("table    abc \n"
-                                    0 5 (face font-lock-keyword-face)
-                                    9 12 (face font-lock-type-face)))))))
+  (dbml-mode-test-file "table-name-line-trailing-with-newline-spaced.txt"))
 
 (ert-deftest dbml-mode-keyword-in-word ()
-  "Do not highlight keyword as a part of other word (possibly mangled)."
-  (with-temp-buffer
-    (insert "notatable\nnot-a-table")
-    (should-not (text-properties-at (point-min)))
-    (dbml-mode-in-ert)
-    (should (string= (format "%S" (buffer-string))
-                     (format "%S" "notatable\nnot-a-table")))))
+  (dbml-mode-test-file "keyword-in-word.txt"))
 
 (ert-deftest dbml-mode-table-name-in-mangled ()
-  "Do not highlight block name for mangled keyword."
-  (let ((lines '("table t"
-                 "table name"
-                 "table name{}"
-                 "table name2 {}"
-                 "xtable t"
-                 "xtable name"
-                 "xtable name{}"
-                 "xtable name2 {}")))
-    (with-temp-buffer
-      (insert (string-join lines "\n"))
-      (should-not (text-properties-at (point-min)))
-      (dbml-mode-in-ert)
-      (should (string= (format "%S" (buffer-string))
-                       (replace-regexp-in-string
-                        "placeholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                        (string-join lines "\n")
-                        (format
-                         "%S" #("placeholderxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                0 5 (face font-lock-keyword-face)
-                                6 7 (face font-lock-type-face)
-                                8 13 (face font-lock-keyword-face)
-                                14 18 (face font-lock-type-face)
-                                19 24 (face font-lock-keyword-face)
-                                25 29 (face font-lock-type-face)
-                                32 37 (face font-lock-keyword-face)
-                                38 43 (face font-lock-type-face)))))))))
+  (dbml-mode-test-file "table-name-in-mangled.txt"))
 
 (ert-deftest dbml-mode-column-name-rehighlight-in-anchored ()
   "Re-highlight columns (anchored block pattern matching region)."
