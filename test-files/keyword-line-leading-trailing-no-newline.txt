@@ -1,2 +1,2 @@
 > table 
-# ^----$|(face font-lock-keyword-face)
+#~^----$|(face font-lock-keyword-face)

@@ -1,16 +1,17 @@
->table t\n
+>table t\
 #^----$|(face font-lock-keyword-face)
 #      ^$|(face font-lock-type-face)
->table name\n
+>table name\
 #^----$|(face font-lock-keyword-face)
 #      ^---$|(face font-lock-type-face)
->table name{}\n
+>table name{}\
 #^----$|(face font-lock-keyword-face)
 #      ^---$|(face font-lock-type-face)
->table name2 {}\n
+#          ~~
+>table name2 {}\
 #^----$|(face font-lock-keyword-face)
 #      ^----$|(face font-lock-type-face)
->xtable t\n
->xtable name\n
->xtable name{}\n
+>xtable t\
+>xtable name\
+>xtable name{}\
 >xtable name2 {}
