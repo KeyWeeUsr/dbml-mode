@@ -1,4 +1,2 @@
->// comment
-#^---------?
->
-#$|(face font-lock-comment-face)
+>// comment\n
+#^----------$|(face font-lock-comment-face)

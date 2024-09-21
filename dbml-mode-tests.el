@@ -20,15 +20,20 @@
       (setq work-buff (current-buffer))
 
       (with-temp-buffer
-        (let ((coding-system-for-read 'utf-8)) (insert-file-contents path))
+        (let ((coding-system-for-read 'utf-8))
+          (insert-file-contents (format "test-files/%s" path)))
         (should (eq (point) (point-min)))
         (while (not (eobp))
           (let ((line (buffer-substring
                        (point) (progn (forward-line 1) (point)))))
             (cond ((string-prefix-p ">" line)
                    (with-current-buffer work-buff
-                     (insert (string-trim-right
-                              (substring-no-properties line 1) "\n"))))
+                     (let ((text (substring-no-properties line 1)))
+                       (insert
+                        (replace-regexp-in-string
+                         (rx (literal "\\n")) "\n"
+                         (string-trim
+                          (substring-no-properties line 1) "\n"))))))
                   ((string-prefix-p "#" line)
                    (let* ((text (substring-no-properties line 1))
                           (start (string-match "\\^" text))
@@ -54,19 +59,22 @@
       (goto-char (point-min))
       (dbml-mode-in-ert)
       (setq highlighted (format "%S" (buffer-string))))
-    (should
-     (string=
-      (substring highlighted 1)
-      (format "%s" `(,(format "%S" to-highlight) ,@(reverse properties)))))))
+    (let ((left (if properties (substring highlighted 1) highlighted))
+          (right
+           (if properties
+               (format
+                "%s" `(,(format "%S" to-highlight) ,@(reverse properties)))
+             (format "%S" to-highlight))))
+      (should (string= left right)))))
 
 (ert-deftest dbml-mode-comment-single-no-newline ()
-  (dbml-mode-test-file "test-files/comment-single-no-newline.txt"))
+  (dbml-mode-test-file "comment-single-no-newline.txt"))
 
 (ert-deftest dbml-mode-comment-single-with-newline ()
-  (dbml-mode-test-file "test-files/comment-single-with-newline.txt"))
+  (dbml-mode-test-file "comment-single-with-newline.txt"))
 
 (ert-deftest dbml-mode-comment-multi-no-newline ()
-  (dbml-mode-test-file "test-files/comment-multi-no-newline.txt"))
+  (dbml-mode-test-file "comment-multi-no-newline.txt"))
 
 (ert-deftest dbml-mode-keyword-line-start-no-newline ()
   "One of the keywords with no newline is highlighted as a keyword."
