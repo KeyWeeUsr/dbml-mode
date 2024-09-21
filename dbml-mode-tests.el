@@ -15,7 +15,7 @@
 
 (defsubst dbml-mode-test-file (path)
   "Check for font properties based on marks in file located in PATH."
-  (let (to-highlight highlighted work-buff properties inside)
+  (let (to-highlight highlighted work-buff properties inside (last-pos 0))
     (with-temp-buffer
       (setq work-buff (current-buffer))
 
@@ -23,37 +23,52 @@
         (let ((coding-system-for-read 'utf-8))
           (insert-file-contents (format "test-files/%s" path)))
         (should (eq (point) (point-min)))
-        (while (not (eobp))
-          (let ((line (buffer-substring
-                       (point) (progn (forward-line 1) (point)))))
-            (cond ((string-prefix-p ">" line)
-                   (with-current-buffer work-buff
-                     (let ((text (substring-no-properties line 1)))
-                       (insert
-                        (replace-regexp-in-string
-                         (rx (literal "\\n")) "\n"
-                         (string-trim
-                          (substring-no-properties line 1) "\n"))))))
-                  ((string-prefix-p "#" line)
-                   (let* ((text (substring-no-properties line 1))
-                          (start (string-match "\\^" text))
-                          (end (string-match "\\$" text)))
-                     (when start
-                       (setq inside t)
-                       (push start properties))
-                     (if (not end)
-                         (progn
-                           (unless (numberp inside) (setq inside 0))
-                           (setq inside (+ inside (string-match "?" text))))
-                       (when (numberp inside)
-                         (setq end (+ end inside)))
-                       (setq inside nil)
-                       (push end properties)
-                       (push (intern
-                              (string-trim-right
-                               (substring-no-properties
-                                line (+ 2 (string-match "|" text))) "\n"))
-                             properties))))))))
+
+        (let (collect track copy line start end)
+          (while (not (eobp))
+            (let ((char (char-to-string (char-after))))
+              (delete-char 1)
+              (cond ((and (not line) (string= char ">")) (setq collect t))
+                    (collect
+                     (cond
+                      ((string= char "\\") (push "\n" line))
+                      ((string= char "\n")
+                       (setq collect nil)
+                       (with-current-buffer work-buff
+                         (insert (string-join (reverse line) "")))
+                       (setq line nil))
+                      (t (push char line))))
+                    ((and (not collect) (string= char "#")) (setq track t))
+                    (track
+                     (cond ((string= char "^")
+                            (setq start last-pos)
+                            (setq inside t)
+                            (push start properties)
+                            (setq last-pos (1+ last-pos)))
+                           ((string= char "-")
+                            ;; inside
+                            (setq last-pos (1+ last-pos)))
+                           ((string= char "~")
+                            ;; outside, whitespace or noise between highlights
+                            (setq last-pos (1+ last-pos)))
+                           ((string= char "$")
+                            (setq end last-pos)
+                            (setq inside nil)
+                            (push end properties)
+                            (setq last-pos (1+ last-pos)))
+                           ((string= char "|")
+                            (setq track nil)
+                            (setq copy t))
+                           ((string= char "\n")
+                            (setq track nil))))
+                    (copy
+                     (if (not (string= char "\n"))
+                         (push char line)
+                       (setq copy nil)
+                       (push (intern (string-join (reverse line) ""))
+                             properties)
+                       (setq line nil)))
+                    (t (setq last-pos (1+ last-pos))))))))
       (setq to-highlight
             (buffer-substring-no-properties (point-min) (point-max)))
       (goto-char (point-min))
