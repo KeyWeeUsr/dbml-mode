@@ -1,5 +1,5 @@
 >table    abc 
 #^----$|(face font-lock-keyword-face)
-#      ~~~
+#     ~~~~
 #         ^--$|(face font-lock-type-face)
 >

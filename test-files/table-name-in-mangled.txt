@@ -1,15 +1,21 @@
 >table t\
 #^----$|(face font-lock-keyword-face)
+#     ~
 #      ^$|(face font-lock-type-face)
+#       ~
 >table name\
 #^----$|(face font-lock-keyword-face)
+#     ~
 #      ^---$|(face font-lock-type-face)
+#          ~
 >table name{}\
 #^----$|(face font-lock-keyword-face)
+#     ~
 #      ^---$|(face font-lock-type-face)
-#          ~~
+#          ~~~
 >table name2 {}\
 #^----$|(face font-lock-keyword-face)
+#     ~
 #      ^----$|(face font-lock-type-face)
 >xtable t\
 >xtable name\
