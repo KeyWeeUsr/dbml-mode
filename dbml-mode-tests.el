@@ -81,92 +81,39 @@
              (format "%S" to-highlight))))
       (should (string= left right)))))
 
-(ert-deftest dbml-mode-comment-single-no-newline ()
-  (dbml-mode-test-file "comment-single-no-newline.txt"))
-
-(ert-deftest dbml-mode-comment-single-with-newline ()
-  (dbml-mode-test-file "comment-single-with-newline.txt"))
-
-(ert-deftest dbml-mode-comment-multi-no-newline ()
-  (dbml-mode-test-file "comment-multi-no-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-start-no-newline ()
-  (dbml-mode-test-file "keyword-line-start-no-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-leading-no-newline ()
-  (dbml-mode-test-file "keyword-line-leading-no-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-leading-trailing-no-newline ()
-  (dbml-mode-test-file "keyword-line-leading-trailing-no-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-trailing-no-newline ()
-  (dbml-mode-test-file "keyword-line-trailing-no-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-start-with-newline ()
-  (dbml-mode-test-file "keyword-line-start-with-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-leading-with-newline ()
-  (dbml-mode-test-file "keyword-line-leading-with-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-leading-trailing-with-newline ()
-  (dbml-mode-test-file "keyword-line-leading-trailing-with-newline.txt"))
-
-(ert-deftest dbml-mode-keyword-line-trailing-with-newline ()
-  (dbml-mode-test-file "keyword-line-trailing-with-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-start-no-newline ()
-  (dbml-mode-test-file "table-name-line-start-no-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-no-newline ()
-  (dbml-mode-test-file "table-name-line-leading-no-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-trailing-no-newline ()
-  (dbml-mode-test-file "table-name-line-leading-trailing-no-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-trailing-no-newline ()
-  (dbml-mode-test-file "table-name-line-trailing-no-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-start-with-newline ()
-  (dbml-mode-test-file "table-name-line-start-with-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-with-newline ()
-  (dbml-mode-test-file "table-name-line-leading-with-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-trailing-with-newline ()
-  (dbml-mode-test-file "table-name-line-leading-trailing-with-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-trailing-with-newline ()
-  (dbml-mode-test-file "table-name-line-trailing-with-newline.txt"))
-
-(ert-deftest dbml-mode-table-name-line-start-no-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-start-no-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-no-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-leading-no-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-trailing-no-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-leading-trailing-no-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-table-name-line-trailing-no-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-trailing-no-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-table-name-line-start-with-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-start-with-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-with-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-leading-with-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-table-name-line-leading-trailing-with-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-leading-trailing-with-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-table-name-line-trailing-with-newline-spaced ()
-  (dbml-mode-test-file "table-name-line-trailing-with-newline-spaced.txt"))
-
-(ert-deftest dbml-mode-keyword-in-word ()
-  (dbml-mode-test-file "keyword-in-word.txt"))
-
-(ert-deftest dbml-mode-table-name-in-mangled ()
-  (dbml-mode-test-file "table-name-in-mangled.txt"))
+(ert-deftest dbml-mode-run-test-files ()
+  "Run `dbml-mode' against test-files and verify its highlighting."
+  (let ((files (directory-files "test-files" nil ".txt"))
+        (ran 0) failed)
+    (dolist (name files)
+      (let* ((stats ert--current-run-stats)
+             (test (make-ert-test
+                    :name (string-trim-right name ".txt")
+                    :body (lambda () (dbml-mode-test-file name))))
+             (result (ert-run-test test)))
+        (setq ran (1+ ran))
+        (if (ert-test-passed-p result)
+            (progn
+              (if (ert-test-result-expected-p test result)
+                  (setf (ert--stats-passed-expected stats)
+                        (1+ (ert--stats-passed-expected stats)))
+                (setf (ert--stats-passed-unexpected stats)
+                      (1+ (ert--stats-passed-unexpected stats)))))
+          (if (ert-test-result-expected-p test result)
+              (setf (ert--stats-failed-expected stats)
+                    (1+ (ert--stats-failed-expected stats)))
+            ;; failed and unexpected
+            (setf (ert--stats-failed-unexpected stats)
+                  (1+ (ert--stats-failed-unexpected stats)))
+            (let ((should-forms (ert-test-failed-should-forms result)))
+              (push `(,(ert-test-name test)
+                      ,(with-temp-buffer (insert (format "%s" should-forms))
+                                         (pp-buffer) (buffer-string)))
+                    failed))))))
+    (advice-add 'ert-stats-total
+                :filter-return `(lambda (result) (+ result ,ran)))
+    (when failed
+      (ert-fail failed))))
 
 (ert-deftest dbml-mode-column-name-rehighlight-in-anchored ()
   "Re-highlight columns (anchored block pattern matching region)."
