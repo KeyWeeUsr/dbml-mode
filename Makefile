@@ -24,7 +24,7 @@ byte-compile: \
 test: byte-compile main-tests
 
 dbml-mode-tests.ok: \
-	dbml-mode.elc dbml-mode-tests.elc
+	dbml-mode.elc dbml-mode-tests.elc test-files
 	$(EMACS) --batch --quick \
 		--directory . \
 		--load dbml-mode-tests.el \
