@@ -73,17 +73,17 @@
       (goto-char (point-min))
       (dbml-mode-in-ert)
       (setq highlighted (format "%S" (buffer-string))))
-    (let ((left (if properties (substring highlighted 1) highlighted))
-          (right
+    (let ((real (if properties (substring highlighted 1) highlighted))
+          (expected
            (if properties
                (format
                 "%s" `(,(format "%S" to-highlight) ,@(reverse properties)))
              (format "%S" to-highlight))))
-      (should (string= left right)))))
+      (should (string= expected real)))))
 
 (ert-deftest dbml-mode-run-test-files ()
   "Run `dbml-mode' against test-files and verify its highlighting."
-  (let ((files (directory-files "test-files" nil ".txt"))
+  (let ((files (directory-files "test-files" nil ".txt$"))
         (ran 0) failed)
     (dolist (name files)
       (let* ((stats ert--current-run-stats)
