@@ -1,0 +1,6 @@
+>table name{col type\
+#^----$|(face font-lock-keyword-face)
+#     ~^---$|(face font-lock-type-face)
+#          ~~~~~~~~~~
+>indexes
+#^------$|(face font-lock-keyword-face)
