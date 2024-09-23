@@ -180,9 +180,10 @@ Argument SCHEMA-NUM `match-data' group containing schema name.
 Argument NAME-NUM `match-data' group containing table name."
   (let* ((begin (match-beginning schema-num))
          (end (match-end name-num))
-         (table-name (format "%s%s"
-                             (match-string schema-num)
-                             (match-string name-num)))
+         (table-name
+          (if (string= (match-string schema-num) "")
+              (format "public.%s" (match-string name-num))
+            (format "%s%s" (match-string schema-num) (match-string name-num))))
          (pattern (rx line-start (*? whitespace)
                       "table" (+? whitespace)
                       (group (? (or (+ (or word "_"))
@@ -202,7 +203,9 @@ Argument NAME-NUM `match-data' group containing table name."
              (pos 0)
              found-tables)
         (while (string-match pattern text pos)
-          (push (format "%s%s" (match-string 1 text) (match-string 2 text))
+          (push (if (string= (match-string 1 text) "")
+                    (format "public.%s" (match-string 2 text))
+                  (format "%s%s" (match-string 1 text) (match-string 2 text)))
                 found-tables)
           (setq pos (match-end 2)))
         (when (member table-name found-tables)
