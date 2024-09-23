@@ -1,3 +1,5 @@
+[![MELPA][melpa-badge]][melpa-package]
+[![MELPA Stable][melpa-stable-badge]][melpa-stable-package]
 [![Buy me a coffee][bmc-badge]][bmc-link]
 [![Liberapay][lp-badge]][lp-link]
 [![PayPal][ppl-badge]][ppl-link]
@@ -10,7 +12,8 @@ checking and rendering SVGs directly in Emacs.
 
 ## How to
 
-Clone and install manually, then simply `M-x dbml-mode`.
+Install it from [Melpa](https://melpa.org/#/getting-started) or clone and
+install manually, then simply `M-x dbml-mode`.
 
 ### Enable for file extensions
 
@@ -24,6 +27,10 @@ of such methods is updating `auto-mode-alist`:
 
 For every file with `.dbml` extension.
 
+[melpa-badge]: http://melpa.org/packages/dbml-mode-badge.svg
+[melpa-package]: http://melpa.org/#/dbml-mode
+[melpa-stable-badge]: http://stable.melpa.org/packages/dbml-mode-badge.svg
+[melpa-stable-package]: http://stable.melpa.org/#/dbml-mode
 [bmc-badge]: https://img.shields.io/badge/-buy_me_a%C2%A0coffee-gray?logo=buy-me-a-coffee
 [bmc-link]: https://www.buymeacoffee.com/peterbadida
 [ppl-badge]: https://img.shields.io/badge/-paypal-grey?logo=paypal
