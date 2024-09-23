@@ -1,0 +1,9 @@
+>table users {}\
+#^----$|(face font-lock-keyword-face)
+#     ~
+#      ^----$|(face font-lock-type-face)
+#           ~~~~
+>table users
+#^----$|(face font-lock-keyword-face)
+#     ~
+#      ^----$|(face (underline error))

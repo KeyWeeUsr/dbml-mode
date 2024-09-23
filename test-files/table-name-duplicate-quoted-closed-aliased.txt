@@ -1,0 +1,13 @@
+>table "my users" as U {}\
+#^----$|(face font-lock-keyword-face)
+#     ~
+#      ^---------$|(face font-lock-type-face)
+#                ~
+#                 ^-$|(face font-lock-keyword-face)
+#                   ~
+#                    ^$|(face (font-lock-type-face italic))
+#                     ~~~~
+>table "my users"
+#^----$|(face font-lock-keyword-face)
+#     ~
+#      ^---------$|(face (underline error))
