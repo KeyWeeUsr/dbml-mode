@@ -67,6 +67,17 @@
   :group 'dbml
   :type 'string)
 
+(defvar dbml-mode--pattern-table-indexes
+  (rx line-start (*? whitespace)
+      ;; must be in a "table" block
+      "table" (*? anychar) (literal "{") (*? anychar)
+      ;; the nested block is a bit different from a column, yet seems like
+      ;; a somewhat workaround for the web editor's parser because of
+      ;; "blank"
+      "indexes" (+? blank) (literal "{")
+      (group (*? anychar))
+      (literal "}") (*? anychar) (literal "}")))
+
 (defmacro dbml-mode--with-sentinel (args success &optional fail always verbose)
   "Decorator for running process with sentinels.
 Argument ARGS passed into `start-process'.
@@ -394,6 +405,51 @@ Argument PROC is a handle from previous process checking for image presence."
        (progn (dbml-mode--validate-unique-column 1))
        (1 'font-lock-variable-name-face t)
        (2 'font-lock-type-face)))
+
+     ;; table indexes; multi-line content in ()/[], the rest must not split
+     ;; two parts; blame non-recursive MATCH-ANCHORED
+     ;; part 1: non-composite
+     (,dbml-mode--pattern-table-indexes
+      (,(rx
+         ;; col name
+         (group (or
+                 ;; normal word
+                 (+ (or word "_"))
+                 ;; quoted with spaces
+                 (and (literal "\"") (+ not-newline) (literal "\""))
+                 ;; func expression
+                 (and (literal "`") (+ not-newline) (literal "`"))))
+         (or (and (+? blank)
+                  ;; ;; col type
+                  ;; (group (+ (or word "_")))
+                  ;; trailing trash and delimiter
+                  (*? anychar)
+                  line-end)
+             line-end))
+       ;; pre-match form
+       (progn
+         ;; start matching in the braces
+         (goto-char (match-beginning 1))
+         ;; then keep the anchored match loop within the block
+         (match-end 0))
+       ;; post-match form
+       nil
+       (1 'font-lock-variable-name-face t)))
+     ;; part 2: composite
+     (,dbml-mode--pattern-table-indexes
+      (,(rx
+         ;; col name
+         (or line-start (+? blank))
+         (literal "(") (group (*? anychar)) (literal ")")
+         (or line-end (+? blank)))
+       ;; pre-match form
+       (progn
+         ;; start matching in the braces
+         (goto-char (match-beginning 1))
+         ;; then keep the anchored match loop within the block
+         (match-end 0))
+       ;; post-match form
+       nil))
 
      ;; TODO: prefix with braces, anchored as a block?
      ;; individual column settings (non-value keywords in angle brackets)

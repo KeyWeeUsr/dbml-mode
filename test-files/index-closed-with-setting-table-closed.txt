@@ -1,0 +1,17 @@
+>table name{col type\
+#^----$|(face font-lock-keyword-face)
+#     ~
+#      ^---$|(face font-lock-type-face)
+#          ~
+#           ^--$|(face font-lock-variable-name-face)
+#              ~
+#               ^---$|(face font-lock-type-face)
+#                   ~
+>indexes {col [pk]}}
+#^------$|(face font-lock-keyword-face)
+#       ~~
+#         ^--$|(face font-lock-variable-name-face)
+#            ~
+#             ^$|(face bold)
+#              ^-$|(face (font-lock-builtin-face))
+#                ^$|(face bold)
