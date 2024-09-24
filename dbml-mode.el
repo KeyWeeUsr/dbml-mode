@@ -114,6 +114,51 @@ be used as a prefix for the message."
               (if (eq (car ,always) 'lambda) (funcall ,always proc msg)
                 (apply (car ,always) (cdr ,always))))))))))
 
+(defun dbml-mode--highlight-index-composite (pos word)
+  "Find each column in the composite index and highlight appropriately."
+  (let ((left 0) (right (length word)))
+    (while (or (string-prefix-p " " (substring-no-properties word left right))
+               (string-prefix-p "," (substring-no-properties word left right)))
+      (setq left (1+ left)))
+    (while (or (string-suffix-p " " (substring-no-properties word left right))
+               (string-suffix-p "," (substring-no-properties word left right)))
+      (setq right (1- right)))
+    (add-face-text-property
+     (+ pos left) (+ pos right) 'font-lock-variable-name-face)))
+
+(defun dbml-mode--validate-index-syntax (num &optional highlight)
+  "Validate whether composite index syntax matches DBML spec.
+Argument NUM `match-data' group containing composite index
+columns separated by =,=, ignoring whitespace.
+Argument HIGHLIGHT propertizes text on top of validation marks, if non-nil."
+  (save-excursion
+    (let ((block-begin (match-beginning num))
+          (pattern
+           (rx (or line-start (+? blank))
+               (group (literal "(")) (group (*? anychar)) (group (literal ")"))
+               (or line-end (+? blank)))))
+      (save-match-data
+        (while (and (> (point) block-begin)
+                    (re-search-backward pattern block-begin t))
+          (when highlight
+            (dolist (idx '(1 3))
+              (add-face-text-property
+               (match-beginning idx) (match-end idx) 'bold)))
+          (let* ((begin (match-beginning 2))
+                 (end (match-end 2))
+                 (text (match-string 2))
+                 (pos begin))
+            (dolist (item (split-string text "," nil))
+              (if (string= "" (string-trim item))
+                  ;; bad syntax, double-comma, possibly with spaces in-between
+                  (if (eq pos end)
+                      (add-face-text-property (1- pos) pos '(underline error))
+                    (add-face-text-property pos (1+ pos) '(underline error)))
+                ;; normal behavior, get words and highlight
+                (when highlight
+                  (dbml-mode--highlight-index-composite pos item)))
+              (setq pos (+ pos (length item) 1)))))))))
+
 (defun dbml-mode--validate-table-names (num)
   "Validate whether table declaration exists.
 Argument NUM `match-data' group containing table name."
@@ -157,7 +202,7 @@ Argument COLUMN-MATCH-NUM `match-data' group containing column name."
           (put-text-property begin end 'face '(underline error)))))))
 
 (defun dbml-mode--validate-unique-column (num)
-  "Validate whether table is declared only once.
+  "Validate whether column is declared only once.
 Argument NUM `match-data' group containing column name."
   ;; TODO: fix me for matching columns names when [] is split
   ;; over multiple lines (fix regex or make it anchored)
@@ -433,7 +478,7 @@ Argument PROC is a handle from previous process checking for image presence."
          ;; then keep the anchored match loop within the block
          (match-end 0))
        ;; post-match form
-       nil
+       (progn (dbml-mode--validate-unique-column 1))
        (1 'font-lock-variable-name-face t)))
      ;; part 2: composite
      (,dbml-mode--pattern-table-indexes
@@ -449,7 +494,8 @@ Argument PROC is a handle from previous process checking for image presence."
          ;; then keep the anchored match loop within the block
          (match-end 0))
        ;; post-match form
-       nil))
+       ;; TODO: font-lock-maximum-decoration [1, 3 or 4] / t
+       (progn (dbml-mode--validate-index-syntax 1 t))))
 
      ;; TODO: prefix with braces, anchored as a block?
      ;; individual column settings (non-value keywords in angle brackets)
