@@ -10,6 +10,8 @@ This major mode attempts to port all of the syntax highlighting from
 https://dbdiagram.io and build upon it by providing helpers such as duplicate
 checking and rendering SVGs directly in Emacs.
 
+![sample][gif]
+
 ## How to
 
 Install it from [Melpa](https://melpa.org/#/getting-started) or clone and
@@ -37,3 +39,4 @@ For every file with `.dbml` extension.
 [ppl-link]: https://paypal.me/peterbadida
 [lp-badge]: https://img.shields.io/badge/-liberapay-grey?logo=liberapay
 [lp-link]: https://liberapay.com/keyweeusr
+[gif]: https://i.imgur.com/OpXUUVk.gif
