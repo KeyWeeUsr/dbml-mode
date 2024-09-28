@@ -350,13 +350,14 @@ Argument PROC is a handle from previous process checking for image presence."
   (interactive)
   (let* ((temp-name (make-temp-name ""))
          (proc-name (format "dbml-mode-render-%s" temp-name))
-         (buff (get-buffer-create proc-name)))
+         (buff (get-buffer-create proc-name))
+         (img (or dbml-mode-use-image-name dbml-mode-build-image-name)))
     (dbml-mode--with-sentinel
         (list proc-name buff "sh" "-c"
               (format "docker images %s|grep %s"
                       (format "--filter=reference=%s"
-                              (shell-quote-argument dbml-mode-use-image-name))
-                      (shell-quote-argument dbml-mode-use-image-name)))
+                              (shell-quote-argument img))
+                      (shell-quote-argument img)))
       'dbml-mode--render-docker-build-cb
       'dbml-mode--render-docker-build
       nil "dbml-mode-check-image")))
