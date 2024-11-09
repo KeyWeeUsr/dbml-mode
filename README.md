@@ -1,10 +1,9 @@
+# dbml-mode
 [![MELPA][melpa-badge]][melpa-package]
 [![MELPA Stable][melpa-stable-badge]][melpa-stable-package]
 [![Buy me a coffee][bmc-badge]][bmc-link]
 [![Liberapay][lp-badge]][lp-link]
 [![PayPal][ppl-badge]][ppl-link]
-
-# dbml-mode
 
 This major mode attempts to port all of the syntax highlighting from
 https://dbdiagram.io and build upon it by providing helpers such as duplicate
