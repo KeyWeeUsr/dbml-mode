@@ -4,7 +4,7 @@
 
 ;; Author: Peter Badida <keyweeusr@gmail.com>
 ;; Keywords: convenience, dbml, language, markup, highlight, dbdiagram, diagram
-;; Version: 1.0.0
+;; Version: 1.1.0
 ;; Package-Requires: ((emacs "24.4"))
 ;; Homepage: https://github.com/KeyWeeUsr/dbml-mode
 
@@ -53,21 +53,45 @@
   :group 'dbml
   :type 'boolean)
 
+(defcustom dbml-mode-jsonify-dockerized
+  t
+  "Use dockerized renderer."
+  :group 'dbml
+  :type 'boolean)
+
 (defcustom dbml-mode-render-bin
   "dbml-renderer"
   "Path to `dbml-renderer' or other compatible binary."
   :group 'dbml
   :type 'string)
 
-(defcustom dbml-mode-build-image-name
-  "dbml-mode-render"
-  "Image name to use for =docker build --tag=."
+(defcustom dbml-mode-jsonify-bin
+  "node"
+  "Path to `node' or other compatible binary with `@dbml/core' installed."
   :group 'dbml
   :type 'string)
 
-(defcustom dbml-mode-use-image-name
+(defcustom dbml-mode-render-build-image-name
+  "dbml-mode-render"
+  "Image name to use for `docker build --tag'."
+  :group 'dbml
+  :type 'string)
+
+(defcustom dbml-mode-jsonify-build-image-name
+  "dbml-mode-jsonify"
+  "Image name to use for `docker build --tag'."
+  :group 'dbml
+  :type 'string)
+
+(defcustom dbml-mode-render-use-image-name
   nil
-  "Image to use for =docker run=, overrides `dbml-mode-build-image-name'."
+  "Image to use for `docker run', overrides `dbml-mode-render-build-image-name'."
+  :group 'dbml
+  :type 'string)
+
+(defcustom dbml-mode-jsonify-use-image-name
+  nil
+  "Image to use for `docker run', overrides `dbml-mode-jsonify-build-image-name'."
   :group 'dbml
   :type 'string)
 
@@ -117,6 +141,16 @@ be used as a prefix for the message."
              ((consp ,always)
               (if (eq (car ,always) 'lambda) (funcall ,always proc msg)
                 (apply (car ,always) (cdr ,always))))))))))
+
+(defsubst dbml-mode--jsonify-js (in-file &optional out-file)
+  "Assemble JS converting DBML in IN-FILE to <IN-FILE>.json or OUT-FILE."
+  (string-join
+   `("const c = require(\"@dbml/core\")"
+     "const fs = require(\"fs\")"
+     ,(format "const inp = fs.readFileSync(%S, \"utf8\")" in-file)
+     "const out = c.Parser.parseDBMLToJSONv2(inp)"
+     ,(format "fs.writeFileSync(%S, JSON.stringify(out, null, 2))"
+              (or out-file (format "%s.json" in-file)))) ";"))
 
 (defun dbml-mode--highlight-index-composite (pos word)
   "Find each column in the composite index and highlight appropriately."
@@ -277,12 +311,25 @@ Argument NAME-NUM `match-data' group containing table name."
   (if dbml-mode-render-dockerized (dbml-mode--render-docker)
     (dbml-mode--render-raw)))
 
+(defun dbml-mode--jsonify ()
+  "Generate JSON for the current buffer."
+  (interactive)
+  (if dbml-mode-jsonify-dockerized (dbml-mode--jsonify-docker)
+    (dbml-mode--jsonify-raw)))
+
 (defsubst dbml-mode--render-raw-cb (proc &rest _)
   "Handler for `dbml-renderer' PROC."
   (kill-buffer (get-buffer-create (process-name proc)))
   (find-file-other-window
    (format "%s.svg" (file-name-nondirectory
                      (expand-file-name buffer-file-truename)))))
+
+(defsubst dbml-mode--jsonify-raw-cb (proc &rest _)
+  "Handler for `node' (`@dbml/core') PROC."
+  (kill-buffer (get-buffer-create (process-name proc)))
+  (find-file-other-window
+   (format "%s.json" (file-name-nondirectory
+                      (expand-file-name buffer-file-truename)))))
 
 (defun dbml-mode--render-raw ()
   "Render current buffer with `dbml-renderer' installed in the system."
@@ -295,18 +342,39 @@ Argument NAME-NUM `match-data' group containing table name."
     (dbml-mode--with-sentinel
         (list proc-name buff dbml-mode-render-bin
               "--input" in-file "--output" (format "%s.svg" in-file))
-      'dbml-mode--render-raw-cb
+      #'dbml-mode--render-raw-cb
+      (switch-to-buffer-other-window buff))))
+
+(defun dbml-mode--jsonify-raw ()
+  "Generate JSON for the current buffer with `node' (`@dbml/core')."
+  (interactive)
+  (let* ((temp-name (make-temp-name ""))
+         (proc-name (format "dbml-mode-jsonify-%s" temp-name))
+         (buff (get-buffer-create proc-name))
+         (in-file (file-name-nondirectory
+                   (expand-file-name buffer-file-truename))))
+    (dbml-mode--with-sentinel
+        (list proc-name buff dbml-mode-jsonify-bin
+              "-e" (dbml-mode--jsonify-js in-file))
+      #'dbml-mode--jsonify-raw-cb
       (switch-to-buffer-other-window buff))))
 
 (defun dbml-mode--render-docker-run-cb (proc &rest _)
-  "Handler for \"docker run\" PROC."
+  "Handler for `docker run' PROC."
   (kill-buffer (get-buffer-create (process-name proc)))
   (find-file-other-window
    (format "%s.svg" (file-name-nondirectory
                      (expand-file-name buffer-file-truename)))))
 
+(defun dbml-mode--jsonify-docker-run-cb (proc &rest _)
+  "Handler for `docker run' PROC."
+  (kill-buffer (get-buffer-create (process-name proc)))
+  (find-file-other-window
+   (format "%s.json" (file-name-nondirectory
+                      (expand-file-name buffer-file-truename)))))
+
 (defun dbml-mode--render-docker-build-cb (proc &rest _)
-  "Handler for \"docker build\" PROC."
+  "Handler for `docker build' PROC."
   (let* ((proc-name (process-name proc))
          (buff (get-buffer-create proc-name))
          (full-path (expand-file-name buffer-file-truename))
@@ -317,11 +385,32 @@ Argument NAME-NUM `match-data' group containing table name."
               "--user" "1000:1000"
               "--volume" (format "%s:/mnt" (file-name-directory full-path))
               "--workdir" "/mnt"
-              (or dbml-mode-use-image-name dbml-mode-build-image-name)
+              (or dbml-mode-render-use-image-name
+                  dbml-mode-render-build-image-name)
               dbml-mode-render-bin
               "--input" in-file
               "--output" (format "%s.svg" (file-name-nondirectory full-path)))
-      'dbml-mode--render-docker-run-cb
+      #'dbml-mode--render-docker-run-cb
+      (switch-to-buffer-other-window (get-buffer-create proc-name))
+      nil "dbml-mode-run")))
+
+(defun dbml-mode--jsonify-docker-build-cb (proc &rest _)
+  "Handler for `docker build' PROC."
+  (let* ((proc-name (process-name proc))
+         (buff (get-buffer-create proc-name))
+         (full-path (expand-file-name buffer-file-truename))
+         (in-file (file-name-nondirectory full-path)))
+    (kill-buffer buff)
+    (dbml-mode--with-sentinel
+        (list proc-name buff "docker" "run"
+              "--user" "1000:1000"
+              "--volume" (format "%s:/mnt" (file-name-directory full-path))
+              "--workdir" "/mnt"
+              "--env" "NODE_PATH=/usr/local/lib/node_modules"
+              (or dbml-mode-jsonify-use-image-name
+                  dbml-mode-jsonify-build-image-name)
+              "node" "-e" (dbml-mode--jsonify-js in-file))
+      #'dbml-mode--jsonify-docker-run-cb
       (switch-to-buffer-other-window (get-buffer-create proc-name))
       nil "dbml-mode-run")))
 
@@ -339,8 +428,30 @@ Argument PROC is a handle from previous process checking for image presence."
       (insert dockerfile)
       (dbml-mode--with-sentinel
           (list proc-name buff "docker" "build"
-                "--tag" dbml-mode-build-image-name "--file" temp-name ".")
-        'dbml-mode--render-docker-build-cb
+                "--tag" dbml-mode-render-build-image-name
+                "--file" temp-name ".")
+        #'dbml-mode--render-docker-build-cb
+        (switch-to-buffer-other-window buff)
+        (delete-file temp-name)
+        "dbml-mode-build"))))
+
+(defun dbml-mode--jsonify-docker-build (proc &rest _)
+  "Build Docker image for `node' (`@dbml/core').
+Argument PROC is a handle from previous process checking for image presence."
+  (let* ((dockerfile (string-join
+                      '("FROM node:alpine"
+                        "RUN npm install -g dbdocs @dbml/core")
+                      "\n"))
+         (proc-name (process-name proc))
+         (buff (get-buffer-create proc-name))
+         (temp-name (car (last (split-string proc-name "-")))))
+    (with-temp-file temp-name
+      (insert dockerfile)
+      (dbml-mode--with-sentinel
+          (list proc-name buff "docker" "build"
+                "--tag" dbml-mode-jsonify-build-image-name
+                "--file" temp-name ".")
+        #'dbml-mode--jsonify-docker-build-cb
         (switch-to-buffer-other-window buff)
         (delete-file temp-name)
         "dbml-mode-build"))))
@@ -351,20 +462,40 @@ Argument PROC is a handle from previous process checking for image presence."
   (let* ((temp-name (make-temp-name ""))
          (proc-name (format "dbml-mode-render-%s" temp-name))
          (buff (get-buffer-create proc-name))
-         (img (or dbml-mode-use-image-name dbml-mode-build-image-name)))
+         (img (or dbml-mode-render-use-image-name
+                  dbml-mode-render-build-image-name)))
     (dbml-mode--with-sentinel
         (list proc-name buff "sh" "-c"
               (format "docker images %s|grep %s"
                       (format "--filter=reference=%s"
                               (shell-quote-argument img))
                       (shell-quote-argument img)))
-      'dbml-mode--render-docker-build-cb
-      'dbml-mode--render-docker-build
+      #'dbml-mode--render-docker-build-cb
+      #'dbml-mode--render-docker-build
+      nil "dbml-mode-check-image")))
+
+(defun dbml-mode--jsonify-docker ()
+  "Generate JSON for the current buffer with dockerized `@dbml/core'."
+  (interactive)
+  (let* ((temp-name (make-temp-name ""))
+         (proc-name (format "dbml-mode-jsonify-%s" temp-name))
+         (buff (get-buffer-create proc-name))
+         (img (or dbml-mode-jsonify-use-image-name
+                  dbml-mode-jsonify-build-image-name)))
+    (dbml-mode--with-sentinel
+        (list proc-name buff "sh" "-c"
+              (format "docker images %s|grep %s"
+                      (format "--filter=reference=%s"
+                              (shell-quote-argument img))
+                      (shell-quote-argument img)))
+      #'dbml-mode--jsonify-docker-build-cb
+      #'dbml-mode--jsonify-docker-build
       nil "dbml-mode-check-image")))
 
 (defvar-local dbml-mode-keymap
   (let ((map (make-keymap)))
     (define-key map (kbd "C-c C-c") #'dbml-mode--render)
+    (define-key map (kbd "C-c C-d") #'dbml-mode--jsonify)
     map)
   "`dbml-mode-mode' key map.")
 
