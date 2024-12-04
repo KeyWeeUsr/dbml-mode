@@ -1,6 +1,8 @@
 # dbml-mode
 [![MELPA][melpa-badge]][melpa-package]
 [![MELPA Stable][melpa-stable-badge]][melpa-stable-package]
+[![CI][ci-badge]][ci-workflow]
+[![Coverage Status][cover-badge]][cover-link]
 [![Buy me a coffee][bmc-badge]][bmc-link]
 [![Liberapay][lp-badge]][lp-link]
 [![PayPal][ppl-badge]][ppl-link]
@@ -39,3 +41,7 @@ For every file with `.dbml` extension.
 [lp-badge]: https://img.shields.io/badge/-liberapay-grey?logo=liberapay
 [lp-link]: https://liberapay.com/keyweeusr
 [gif]: https://i.imgur.com/OpXUUVk.gif
+[ci-badge]: https://github.com/KeyWeeUsr/dbml-mode/actions/workflows/test.yml/badge.svg
+[ci-workflow]: https://github.com/KeyWeeUsr/dbml-mode/actions/workflows/test.yml
+[cover-badge]: https://coveralls.io/repos/github/KeyWeeUsr/dbml-mode/badge.svg?branch=master
+[cover-link]: https://coveralls.io/github/KeyWeeUsr/dbml-mode?branch=master
