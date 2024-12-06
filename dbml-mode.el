@@ -177,7 +177,9 @@ be used as a prefix for the message."
               (or out-file (format "%s.json" in-file)))) ";"))
 
 (defsubst dbml-mode--parsedb-js (type cred &optional out-file)
-  "Assemble JS converting DBML in IN-FILE to <IN-FILE>.json or OUT-FILE."
+  "Assemble JS converting DBML in IN-FILE to <IN-FILE>.json or OUT-FILE.
+Argument TYPE Database type.
+Argument CRED Database connection string or other credentials."
   (when (string= (string-trim out-file) "") (setq out-file nil))
   (string-join
    `("const conn = require(\"@dbml/connector\").connector"
@@ -189,7 +191,9 @@ require(\"fs\").writeFileSync(%S, c.importer.generateDbml(dbJson)))"
    ";"))
 
 (defun dbml-mode--highlight-index-composite (pos word)
-  "Find each column in the composite index and highlight appropriately."
+  "Find each column in the composite index and highlight appropriately.
+Argument POS Beginning of column in composite index.
+Argument WORD Trimmed column name to look for."
   (let ((left 0) (right (length word)))
     (while (or (string-prefix-p " " (substring-no-properties word left right))
                (string-prefix-p "," (substring-no-properties word left right)))
@@ -201,7 +205,7 @@ require(\"fs\").writeFileSync(%S, c.importer.generateDbml(dbJson)))"
      (+ pos left) (+ pos right) 'font-lock-variable-name-face)))
 
 (defun dbml-mode--validate-index-syntax (num &optional highlight)
-  "Validate whether composite index syntax matches DBML spec.
+  "Validate composite index syntax matching DBML spec.
 Argument NUM `match-data' group containing composite index
 columns separated by =,=, ignoring whitespace.
 Argument HIGHLIGHT propertizes text on top of validation marks, if non-nil."
@@ -353,7 +357,10 @@ Argument NAME-NUM `match-data' group containing table name."
   (if dbml-mode-jsonify-dockerized (dbml-mode--jsonify-docker)
     (dbml-mode--jsonify-raw)))
 
-(defsubst dbml-more--read-string (default &optional func &rest args)
+(defsubst dbml-mode--read-string (default &optional func &rest args)
+  "Read-string with a DEFAULT value.
+Optional argument FUNC `read-string' or similar reader.
+Optional argument ARGS Arguments for func."
   (unless func (setq func 'read-string))
   (let ((input (apply func args)))
     (if (string= "" input) default input)))
@@ -373,10 +380,10 @@ Argument NAME-NUM `match-data' group containing table name."
                (string= "mysql" type))
            (setq cred (format "%s://%s" cred (read-string "Username: ")))
            (setq cred (format "%s:%s" cred (read-passwd "Password: ")))
-           (setq cred (format "%s@%s" cred (dbml-more--read-string
+           (setq cred (format "%s@%s" cred (dbml-mode--read-string
                                                   "localhost" nil "Host: ")))
            (setq cred (format "%s:%s" cred
-                              (dbml-more--read-string
+                              (dbml-mode--read-string
                                (if (string= "mysql" type) "3306" "5432")
                                nil "Port: ")))
            (setq cred (format "%s/%s" cred (read-string "Name: ")))
@@ -387,19 +394,19 @@ Argument NAME-NUM `match-data' group containing table name."
              ;; not a typo
              (setq type "postgres")))
           ((string= "mssql" type)
-           (setq cred (format "Server=%s" (dbml-more--read-string
+           (setq cred (format "Server=%s" (dbml-mode--read-string
                                            "localhost" nil "Host: ")))
-           (setq cred (format "%s,%s" cred (dbml-more--read-string
+           (setq cred (format "%s,%s" cred (dbml-mode--read-string
                                             "1433" nil "Port: ")))
            (setq cred (format "%s;Database=%s" cred (read-string "Name: ")))
            (setq cred (format "%s;User Id=%s" cred (read-string "Username: ")))
            (setq cred (format "%s;Password=%s" cred
                               (read-passwd "Password: ")))
            (setq cred (format "%s;Encrypt=%s" cred
-                              (dbml-more--read-string
+                              (dbml-mode--read-string
                                "true" nil "Encrypt (true): ")))
            (setq cred (format "%s;TrustServerCertificate=%s" cred
-                              (dbml-more--read-string
+                              (dbml-mode--read-string
                                "true" nil "Trust (true): ")))
 
            (let ((schemas (read-string "Schemas: (schema1,schema2)": )))
@@ -424,7 +431,8 @@ Argument NAME-NUM `match-data' group containing table name."
                       (expand-file-name buffer-file-truename)))))
 
 (defsubst dbml-mode--parsedb-raw-cb (proc out-file &rest _)
-  "Handler for `node' (`@dbml/core') PROC."
+  "Handler for `node' (`@dbml/core') PROC.
+Argument OUT-FILE Generated DBML destination."
   (kill-buffer (get-buffer-create (process-name proc)))
   (find-file-other-window out-file))
 
@@ -457,7 +465,10 @@ Argument NAME-NUM `match-data' group containing table name."
       (switch-to-buffer-other-window buff))))
 
 (defun dbml-mode--parsedb-raw (type cred &optional out-file)
-  "Generate JSON for the current buffer with `node' (`@dbml/core')."
+  "Generate JSON for the current buffer with `node' (`@dbml/core').
+Argument TYPE Database type.
+Argument CRED Database connection string or other credentials.
+Optional argument OUT-FILE Generated DBML destination."
   (interactive)
   (let* ((temp-name (make-temp-name ""))
          (proc-name (format "dbml-mode-parsedb-%s" temp-name))
@@ -485,7 +496,8 @@ Argument NAME-NUM `match-data' group containing table name."
                       (expand-file-name buffer-file-truename)))))
 
 (defun dbml-mode--parsedb-docker-run-cb (proc old-file out-file &rest _)
-  "Handler for `docker run' PROC."
+  "Handler for `docker run' PROC.
+Argument OLD-FILE Generated file to move to OUT-FILE."
   (kill-buffer (get-buffer-create (process-name proc)))
   (rename-file old-file out-file t)
   (find-file-other-window out-file))
@@ -533,7 +545,10 @@ Argument NAME-NUM `match-data' group containing table name."
 
 (defun dbml-mode--parsedb-docker-build-cb
     (proc type cred &optional out-file &rest _)
-  "Handler for `docker build' PROC."
+  "Handler for `docker build' PROC.
+Argument TYPE Database type.
+Argument CRED Database connection string or other credentials.
+Optional argument OUT-FILE Generated DBML destination."
   (let* ((proc-name (process-name proc))
          (buff (get-buffer-create proc-name))
          (full-path (expand-file-name buffer-file-truename))
@@ -603,7 +618,10 @@ Argument PROC is a handle from previous process checking for image presence."
 (defun dbml-mode--parsedb-docker-build
     (proc type cred &optional out-file &rest _)
   "Build Docker image for `node' (`@dbml/core').
-Argument PROC is a handle from previous process checking for image presence."
+Argument PROC is a handle from previous process checking for image presence.
+Argument TYPE Database type.
+Argument CRED Database connection string or other credentials.
+Optional argument OUT-FILE Generated DBML destination."
   (let* ((dockerfile
           (string-join
            '("FROM node:alpine"
@@ -661,7 +679,10 @@ Argument PROC is a handle from previous process checking for image presence."
       nil "dbml-mode-check-image")))
 
 (defun dbml-mode--parsedb-docker (type cred &optional out-file)
-  "Generate JSON for the current buffer with dockerized `@dbml/core'."
+  "Generate JSON for the current buffer with dockerized `@dbml/core'.
+Argument TYPE Database type.
+Argument CRED Database connection string or other credentials.
+Optional argument OUT-FILE Generated DBML destination."
   (interactive)
   (let* ((temp-name (make-temp-name ""))
          (proc-name (format "dbml-mode-parsedb-%s" temp-name))
