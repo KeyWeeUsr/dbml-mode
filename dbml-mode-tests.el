@@ -11,7 +11,9 @@
   "Because something is turned off in ERT."
   (dbml-mode)
   (font-lock-mode 1)
-  (font-lock-ensure))
+  (if (< emacs-major-version 25)
+      (font-lock-fontify-buffer)
+    (font-lock-ensure)))
 
 (defsubst dbml-mode-test-file (path)
   "Check for font properties based on marks in file located in PATH."
